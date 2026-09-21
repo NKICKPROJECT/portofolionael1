@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portofolio Tech | Dynamic</title>
+    <title>Portofolio | Dynamic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     
@@ -29,7 +29,7 @@
         .editable-block:focus-within { border-color: #10b981; background-color: white; outline: none; }
         .editor-controls { display: none; position: absolute; top: -12px; right: -10px; gap: 5px; z-index: 10; }
         .editable-block:hover .editor-controls { display: flex; }
-        .control-btn { background: #3b82f6; color: white; border-radius: 50%; width: 26px; height: 26px; text-align: center; cursor: pointer; font-size: 14px; line-height: 26px; shadow: md; }
+        .control-btn { background: #3b82f6; color: white; border-radius: 50%; width: 26px; height: 26px; text-align: center; cursor: pointer; font-size: 14px; line-height: 26px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .control-btn.del { background: #ef4444; }
         
         [contenteditable]:empty:before { content: attr(placeholder); color: #9ca3af; pointer-events: none; display: block; }
@@ -39,6 +39,12 @@
 
     <!-- INPUT FILE TERSEMBUNYI UNTUK UPLOAD GAMBAR -->
     <input type="file" id="imageUploader" accept="image/*" class="hidden" onchange="processImageUpload(event)">
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toastNotification" class="fixed top-24 right-4 transform translate-x-full transition-transform duration-300 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg z-[60] flex items-center gap-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span id="toastMessage" class="font-bold text-sm md:text-base">Berhasil!</span>
+    </div>
 
     <!-- HALAMAN UTAMA PUBLIK -->
     <div id="publicView">
@@ -58,7 +64,8 @@
                     <button onclick="toggleMenu()" class="p-2 text-emerald-400 hover:text-emerald-300">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
-                    <h1 class="text-2xl font-bold text-white tracking-wider" id="navLogo">&lt;Nathanael /&gt;</h1>
+                    <!-- Teks Navigasi sudah bersih dari < /> -->
+                    <h1 class="text-2xl font-bold text-white tracking-wider" id="navLogo">Portofolio</h1>
                 </div>
                 <div>
                     <button id="loginBtn" onclick="showModal('loginModal')" class="text-sm bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition font-semibold">Admin Login</button>
@@ -80,7 +87,11 @@
             <div class="relative inline-block mb-8">
                 <img id="profileImgDisplay" src="https://ui-avatars.com/api/?name=Nathanael&background=10b981&color=fff&size=150" class="w-40 h-40 rounded-full border-4 border-emerald-500 object-cover shadow-[0_0_30px_rgba(16,185,129,0.5)]">
             </div>
-            <h2 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight" id="nameDisplay">System.<span class="text-gradient" id="roleDisplay">Architect</span></h2>
+            <!-- Teks System. sudah dihapus -->
+            <h2 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight" id="nameDisplay">
+                <span class="text-white" id="displayNameText">Nama Saya</span> 
+                <span class="text-gradient" id="displayRoleText">Posisi</span>
+            </h2>
             <p class="text-gray-300 max-w-2xl mx-auto text-lg md:text-xl leading-relaxed" id="bioDisplay">
                 Mengubah baris kode menjadi solusi digital yang elegan.
             </p>
@@ -104,7 +115,7 @@
             <h3 class="text-2xl font-bold mb-6 text-white">⚙️ Pengaturan Website</h3>
             <div class="space-y-4">
                 <div><label class="text-xs text-gray-400">Nama Lengkap / Brand</label><input type="text" id="set_name" class="w-full p-2 mt-1 rounded bg-dark border border-gray-700 text-white"></div>
-                <div><label class="text-xs text-gray-400">Peran / Posisi (cth: Architect)</label><input type="text" id="set_role" class="w-full p-2 mt-1 rounded bg-dark border border-gray-700 text-white"></div>
+                <div><label class="text-xs text-gray-400">Judul Tambahan / Peran</label><input type="text" id="set_role" class="w-full p-2 mt-1 rounded bg-dark border border-gray-700 text-white"></div>
                 <div><label class="text-xs text-gray-400">Deskripsi Bio Singkat</label><textarea id="set_bio" class="w-full p-2 mt-1 rounded bg-dark border border-gray-700 text-white h-20"></textarea></div>
                 
                 <div class="p-3 border border-gray-700 rounded bg-dark/50">
@@ -136,25 +147,27 @@
 
         <div class="flex flex-1 overflow-hidden bg-gray-100 text-black">
             <!-- Workspace / Canvas -->
-            <div class="flex-1 overflow-y-auto p-4 md:p-10 flex flex-col items-center">
+            <div class="flex-1 overflow-y-auto p-4 md:p-10 flex flex-col items-center relative">
+                
+                <!-- Toolbar Teks (Floating) -->
+                <div id="textToolbar" class="hidden bg-white border border-gray-300 shadow-lg rounded p-1 sticky top-4 z-20 gap-1 justify-center mb-4 flex">
+                    <button onclick="document.execCommand('bold',false,null)" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">B</button>
+                    <button onclick="document.execCommand('italic',false,null)" class="px-2 py-1 hover:bg-gray-200 italic rounded">I</button>
+                    <button onclick="document.execCommand('underline',false,null)" class="px-2 py-1 hover:bg-gray-200 underline rounded">U</button>
+                    <div class="w-px bg-gray-300 mx-1"></div>
+                    <button onclick="document.execCommand('formatBlock', false, 'H2')" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">H2</button>
+                    <button onclick="document.execCommand('formatBlock', false, 'H3')" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">H3</button>
+                    <button onclick="document.execCommand('formatBlock', false, 'P')" class="px-2 py-1 hover:bg-gray-200 rounded">P</button>
+                    <div class="w-px bg-gray-300 mx-1"></div>
+                    <button onclick="document.execCommand('insertUnorderedList',false,null)" class="px-2 py-1 hover:bg-gray-200 rounded">• List</button>
+                </div>
+
                 <div class="w-full max-w-4xl bg-white shadow-md min-h-screen border rounded">
                     <!-- Judul Proyek -->
                     <div class="w-full bg-slate-800 h-40 relative flex items-center justify-center text-white text-center rounded-t">
                         <input type="text" id="draftTitle" placeholder="JUDUL PROYEK" class="bg-transparent text-4xl font-bold text-center border-none focus:outline-none w-full placeholder-gray-400 uppercase px-4">
                     </div>
-                    <!-- Toolbar Teks Sederhana (Hanya muncul saat klik teks) -->
-                    <div id="textToolbar" class="hidden bg-white border border-gray-300 shadow-lg rounded p-1 sticky top-0 z-20 flex gap-1 justify-center m-2">
-                        <button onclick="document.execCommand('bold',false,null)" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">B</button>
-                        <button onclick="document.execCommand('italic',false,null)" class="px-2 py-1 hover:bg-gray-200 italic rounded">I</button>
-                        <button onclick="document.execCommand('underline',false,null)" class="px-2 py-1 hover:bg-gray-200 underline rounded">U</button>
-                        <div class="w-px bg-gray-300 mx-1"></div>
-                        <button onclick="document.execCommand('formatBlock', false, 'H2')" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">H2</button>
-                        <button onclick="document.execCommand('formatBlock', false, 'H3')" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">H3</button>
-                        <button onclick="document.execCommand('formatBlock', false, 'P')" class="px-2 py-1 hover:bg-gray-200 rounded">P</button>
-                        <div class="w-px bg-gray-300 mx-1"></div>
-                        <button onclick="document.execCommand('insertUnorderedList',false,null)" class="px-2 py-1 hover:bg-gray-200 rounded">• List</button>
-                    </div>
-
+                    
                     <!-- Area Konten -->
                     <div id="canvasArea" class="p-6 md:p-10 min-h-[400px]" onclick="checkTextFocus(event)">
                         <div class="text-center text-gray-400 mt-10 italic pointer-events-none" id="emptyState">Gunakan menu di kanan untuk menyisipkan elemen.</div>
@@ -211,7 +224,7 @@
     <div id="loginModal" class="fixed inset-0 bg-black/90 flex items-center justify-center hidden z-50 backdrop-blur-md">
         <div class="card-glass p-8 rounded-2xl w-96 relative border-emerald-900 shadow-2xl">
             <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
-            <h3 class="text-2xl font-bold mb-6 text-center text-white">System Access</h3>
+            <h3 class="text-2xl font-bold mb-6 text-center text-white">Admin Login</h3>
             <input type="text" id="username" placeholder="Username" class="w-full mb-4 p-3 rounded bg-dark text-white border border-gray-700">
             <input type="password" id="password" placeholder="Password" class="w-full mb-6 p-3 rounded bg-dark text-white border border-gray-700">
             <button onclick="attemptLogin()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition">LOGIN</button>
@@ -223,20 +236,29 @@
         const ADMIN_PASS = "Nathanael123@";
         let isAdmin = false;
         
-        let currentEditProjectId = null; // Menyimpan ID proyek yang sedang diedit
-        let uploadTarget = null; // Menyimpan tujuan upload ('profile', 'bg', atau 'block_image')
-        let tempBlockUploadId = null;
+        let currentEditProjectId = null;
+        let uploadTarget = null;
 
         // Data Storage
         let siteSettings = JSON.parse(localStorage.getItem('tech_settings')) || {
-            name: "Nathanael", role: "Architect", bio: "Mengubah baris kode menjadi solusi digital yang elegan.",
+            name: "Portofolio Christofan", role: "Web Developer", bio: "Mengubah baris kode menjadi solusi digital yang elegan.",
             bg: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1920&q=80",
-            profile: "https://ui-avatars.com/api/?name=Nathanael&background=10b981&color=fff&size=150"
+            profile: "https://ui-avatars.com/api/?name=NA&background=10b981&color=fff&size=150"
         };
         let projects = JSON.parse(localStorage.getItem('tech_projects')) || [];
         let menuItems = JSON.parse(localStorage.getItem('tech_menus')) || [{ id: 1, name: "Home", url: "#" }];
 
-        // --- SISTEM UPLOAD GAMBAR DARI PERANGKAT (Resize to Base64) ---
+        // --- SISTEM TOAST NOTIFICATION ---
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').innerText = message;
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000); // Hilang otomatis setelah 3 detik
+        }
+
+        // --- SISTEM UPLOAD GAMBAR DARI PERANGKAT ---
         function triggerUpload(target) {
             uploadTarget = target;
             document.getElementById('imageUploader').click();
@@ -246,13 +268,12 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // Kompresi otomatis menggunakan Canvas agar localStorage tidak jebol
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; // Resize agar ringan
+                    const MAX_WIDTH = 800;
                     let width = img.width;
                     let height = img.height;
 
@@ -264,7 +285,7 @@
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    const base64String = canvas.toDataURL('image/jpeg', 0.7); // 70% Quality
+                    const base64String = canvas.toDataURL('image/jpeg', 0.7);
 
                     if (uploadTarget === 'profile') {
                         document.getElementById('preview_profile').src = base64String;
@@ -283,12 +304,14 @@
 
         // --- MANAJEMEN TAMPILAN UTAMA & PENGATURAN GLOBAL ---
         function applyGlobalSettings() {
-            document.getElementById('nameDisplay').innerHTML = `System.<span class="text-gradient">${siteSettings.name}</span>`;
-            document.getElementById('roleDisplay').innerText = siteSettings.role;
+            // Teks Navigasi dan Judul Bersih
+            document.getElementById('navLogo').innerText = siteSettings.name;
+            document.getElementById('displayNameText').innerText = siteSettings.name;
+            document.getElementById('displayRoleText').innerText = siteSettings.role;
+            
             document.getElementById('bioDisplay').innerText = siteSettings.bio;
             document.getElementById('bgImgDisplay').src = siteSettings.bg;
             document.getElementById('profileImgDisplay').src = siteSettings.profile;
-            document.getElementById('navLogo').innerText = `<${siteSettings.name} />`;
 
             // Form Pengaturan
             document.getElementById('set_name').value = siteSettings.name;
@@ -309,7 +332,7 @@
             localStorage.setItem('tech_settings', JSON.stringify(siteSettings));
             applyGlobalSettings();
             closeModal('settingsModal');
-            alert('Pengaturan Global Berhasil Disimpan!');
+            showToast('Pengaturan Website Berhasil Diperbarui!');
         }
 
         function toggleMenu() {
@@ -320,14 +343,12 @@
         }
 
         function renderData() {
-            // Render Menu
             const menuList = document.getElementById('menuList');
             menuList.innerHTML = '';
             menuItems.forEach(item => {
                 menuList.innerHTML += `<li class="flex justify-between items-center group"><a href="${item.url}" class="block w-full p-2 hover:bg-emerald-900/40 rounded">${item.name}</a> ${isAdmin ? `<button onclick="deleteMenu(${item.id})" class="text-red-500 text-xs hidden group-hover:block px-2">Del</button>` : ''}</li>`;
             });
 
-            // Render Portofolio
             const grid = document.getElementById('portfolioGrid');
             grid.innerHTML = '';
             projects.forEach(proj => {
@@ -339,10 +360,9 @@
                         </div>
                         <div class="p-6 flex-grow bg-white/5 group-hover:bg-white/10 transition">
                             <h3 class="text-xl font-bold mb-3 text-emerald-400 uppercase tracking-wide">${proj.title}</h3>
-                            <div class="text-gray-300 text-sm line-clamp-3 prose prose-invert w-full truncate-html">${proj.cleanHTML.substring(0, 150)}...</div>
+                            <div class="text-gray-300 text-sm line-clamp-3 prose prose-invert w-full">${proj.cleanHTML.replace(/<[^>]+>/g, '').substring(0, 150)}...</div>
                         </div>
                         
-                        <!-- VIEW PROJECT OVERLAY (Untuk lihat isi lengkap) -->
                         <div class="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition z-20 gap-2 backdrop-blur-sm">
                             <button onclick="viewProject(${proj.id})" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold">Lihat Detail</button>
                             ${isAdmin ? `
@@ -355,7 +375,6 @@
             });
         }
 
-        // --- SISTEM LOGIN & MODAL ---
         function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         
@@ -366,7 +385,8 @@
                 document.getElementById('loginBtn').classList.add('hidden');
                 document.getElementById('adminControls').classList.remove('hidden');
                 renderData();
-            } else { alert('Akses Ditolak!'); }
+                showToast('Login Berhasil, Selamat Datang Admin!');
+            } else { alert('Akses Ditolak! Cek Username / Password.'); }
         }
 
         function logout() {
@@ -374,9 +394,10 @@
             document.getElementById('loginBtn').classList.remove('hidden');
             document.getElementById('adminControls').classList.add('hidden');
             renderData();
+            showToast('Anda Telah Logout.');
         }
 
-        // --- SISTEM EDITOR GOOGLE SITES (Block Builder) ---
+        // --- SISTEM EDITOR GOOGLE SITES ---
         function openEditor() {
             document.getElementById('siteEditor').classList.remove('hidden');
             document.getElementById('siteEditor').classList.add('flex');
@@ -412,11 +433,10 @@
         function addBlock(type) {
             hideEmptyState();
             const id = Date.now();
-            let content = '';
             let html = `<div id="block-${id}" class="editable-block group w-full">${getControlsHTML()}`;
 
             if(type === 'text') {
-                html += `<div contenteditable="true" placeholder="Ketik teks, gunakan toolbar di atas untuk format (B, I, U, Header)..." class="w-full text-lg outline-none min-h-[60px] p-2 break-words"></div>`;
+                html += `<div contenteditable="true" placeholder="Ketik teks di sini..." class="w-full text-lg outline-none min-h-[60px] p-2 break-words"></div>`;
             } else if (type === 'divider') {
                 html += `<hr class="border-t-2 border-gray-300 my-4 w-full">`;
             } else if (type === 'button') {
@@ -424,14 +444,14 @@
                 const btnUrl = prompt("URL Tujuan (cth: https://google.com):") || "#";
                 html += `<div class="text-center w-full"><a href="${btnUrl}" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-full font-bold uppercase cursor-pointer" contenteditable="false">${btnText}</a></div>`;
             } else if (type === 'youtube') {
-                const ytUrl = prompt("Masukkan URL YouTube (cth: https://www.youtube.com/watch?v=XXXX):");
+                const ytUrl = prompt("Masukkan URL YouTube:");
                 if(!ytUrl) return;
                 const videoId = ytUrl.split('v=')[1]?.substring(0, 11) || ytUrl.split('youtu.be/')[1]?.substring(0, 11);
                 html += `<div class="w-full flex justify-center"><iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen class="rounded shadow-lg"></iframe></div>`;
             } else if (type === 'layout_left') {
-                html += `<div class="flex flex-col md:flex-row gap-6 w-full"><div class="w-full md:w-1/2 min-h-[150px] bg-gray-200 rounded flex items-center justify-center text-gray-400 border cursor-pointer" onclick="replacePlaceholderImage(this)">Klik Untuk Ganti Gambar</div><div contenteditable="true" placeholder="Ketik penjelasan di samping gambar..." class="w-full md:w-1/2 outline-none p-2 min-h-[100px]"></div></div>`;
+                html += `<div class="flex flex-col md:flex-row gap-6 w-full"><div class="w-full md:w-1/2 min-h-[150px] bg-gray-200 rounded flex items-center justify-center text-gray-400 border cursor-pointer" onclick="replacePlaceholderImage(this)">Klik Untuk Ganti URL Gambar</div><div contenteditable="true" placeholder="Ketik teks..." class="w-full md:w-1/2 outline-none p-2 min-h-[100px]"></div></div>`;
             } else if (type === 'layout_right') {
-                html += `<div class="flex flex-col md:flex-row gap-6 w-full"><div contenteditable="true" placeholder="Ketik penjelasan di samping gambar..." class="w-full md:w-1/2 outline-none p-2 min-h-[100px]"></div><div class="w-full md:w-1/2 min-h-[150px] bg-gray-200 rounded flex items-center justify-center text-gray-400 border cursor-pointer" onclick="replacePlaceholderImage(this)">Klik Untuk Ganti Gambar</div></div>`;
+                html += `<div class="flex flex-col md:flex-row gap-6 w-full"><div contenteditable="true" placeholder="Ketik teks..." class="w-full md:w-1/2 outline-none p-2 min-h-[100px]"></div><div class="w-full md:w-1/2 min-h-[150px] bg-gray-200 rounded flex items-center justify-center text-gray-400 border cursor-pointer" onclick="replacePlaceholderImage(this)">Klik Untuk Ganti URL Gambar</div></div>`;
             }
             
             html += `</div>`;
@@ -446,42 +466,35 @@
         }
 
         function replacePlaceholderImage(el) {
-            // Fitur sederhana untuk mengganti placeholder layout
-            const url = prompt("Masukkan URL Gambar atau biarkan kosong untuk default:");
+            const url = prompt("Masukkan URL Gambar:");
             if(url) { el.outerHTML = `<img src="${url}" class="w-full md:w-1/2 object-cover rounded shadow">`; }
         }
 
-        // --- SISTEM SIMPAN DAN EDIT PROYEK (CRUD) ---
+        // --- SISTEM SIMPAN DAN EDIT PROYEK ---
         function publishProject() {
             const title = document.getElementById('draftTitle').value;
-            if(!title) return alert("Judul Proyek di bagian atas hitam wajib diisi!");
+            if(!title) return alert("Judul Proyek wajib diisi!");
 
             const canvasArea = document.getElementById('canvasArea');
             const blocks = canvasArea.querySelectorAll('.editable-block');
             if(blocks.length === 0) return alert("Kanvas kosong! Tambahkan elemen dari kanan.");
 
-            // Ekstrak Cover Gambar
             let firstImage = "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=600&q=80";
             const imgTag = canvasArea.querySelector('img');
             if(imgTag) firstImage = imgTag.src;
 
-            // Simpan Data Editor (HTML mentah) dan Data Bersih (Untuk Render Publik)
             let editorHTML = canvasArea.innerHTML;
-            
-            // Proses Clean HTML
             let cleanWrapper = document.createElement('div');
             cleanWrapper.innerHTML = editorHTML;
             cleanWrapper.querySelectorAll('.editor-controls').forEach(e => e.remove());
-            cleanWrapper.querySelectorAll('.editable-block').forEach(e => {
-                e.className = "mb-6 w-full"; // Ganti class untuk publik
-            });
+            cleanWrapper.querySelectorAll('.editable-block').forEach(e => e.className = "mb-6 w-full");
             cleanWrapper.querySelectorAll('[contenteditable]').forEach(e => {
                 e.removeAttribute('contenteditable'); e.removeAttribute('placeholder'); e.classList.remove('outline-none');
             });
             let cleanHTML = cleanWrapper.innerHTML;
 
             const projectData = {
-                id: currentEditProjectId || Date.now(), // Update jika ada ID, Buat baru jika tidak ada
+                id: currentEditProjectId || Date.now(),
                 title: title,
                 coverImage: firstImage,
                 editorHTML: editorHTML,
@@ -489,28 +502,24 @@
             };
 
             if (currentEditProjectId) {
-                // Update existing
                 const index = projects.findIndex(p => p.id === currentEditProjectId);
                 if (index !== -1) projects[index] = projectData;
             } else {
-                // Insert new
                 projects.unshift(projectData);
             }
             
             localStorage.setItem('tech_projects', JSON.stringify(projects));
             renderData();
             closeEditor();
-            alert(currentEditProjectId ? "Proyek berhasil diperbarui!" : "Proyek Baru berhasil dipublikasikan!");
+            showToast(currentEditProjectId ? "Proyek berhasil diperbarui!" : "Proyek Baru berhasil dipublikasikan!");
         }
 
         function editProject(id) {
             const proj = projects.find(p => p.id === id);
             if(!proj) return;
-            
             currentEditProjectId = id;
             document.getElementById('siteEditor').classList.remove('hidden');
             document.getElementById('siteEditor').classList.add('flex');
-            
             document.getElementById('draftTitle').value = proj.title;
             document.getElementById('canvasArea').innerHTML = proj.editorHTML;
         }
@@ -520,15 +529,13 @@
                 projects = projects.filter(p => p.id !== id);
                 localStorage.setItem('tech_projects', JSON.stringify(projects));
                 renderData();
+                showToast("Proyek berhasil dihapus.");
             }
         }
 
-        // Tampilan Publik Proyek Detail
         function viewProject(id) {
             const proj = projects.find(p => p.id === id);
             if(!proj) return;
-            
-            // Buat window pop-up atau overlay (untuk saat ini buat overlay sederhana)
             const detailModal = document.createElement('div');
             detailModal.className = "fixed inset-0 bg-black/95 z-[60] overflow-y-auto p-4 md:p-10 flex flex-col items-center backdrop-blur-md";
             detailModal.innerHTML = `
@@ -539,15 +546,11 @@
                         <img src="${proj.coverImage}" class="absolute inset-0 w-full h-full object-cover z-[-1] blur-sm opacity-50">
                         <h1 class="text-4xl md:text-6xl font-black text-white uppercase z-10 tracking-widest">${proj.title}</h1>
                     </div>
-                    <div class="bg-white text-black p-8 md:p-14 rounded-b-xl min-h-[50vh] prose prose-lg max-w-none shadow-2xl">
-                        ${proj.cleanHTML}
-                    </div>
-                </div>
-            `;
+                    <div class="bg-white text-black p-8 md:p-14 rounded-b-xl min-h-[50vh] prose prose-lg max-w-none shadow-2xl">${proj.cleanHTML}</div>
+                </div>`;
             document.body.appendChild(detailModal);
         }
 
-        // Menu Tambahan Sidebar
         function addMenu() {
             const name = document.getElementById('newMenuName').value;
             const url = document.getElementById('newMenuUrl').value || '#';
@@ -555,7 +558,7 @@
             menuItems.push({ id: Date.now(), name, url });
             localStorage.setItem('tech_menus', JSON.stringify(menuItems));
             document.getElementById('newMenuName').value = ''; document.getElementById('newMenuUrl').value = '';
-            renderData(); alert("Menu ditambahkan!");
+            renderData(); showToast("Menu navigasi ditambahkan!");
         }
 
         function deleteMenu(id) {
