@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portofolio | Dynamic</title>
+    <title>Portofolio | Dynamic Sites</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,600;1,400&family=Fira+Code&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Space Grotesk', 'sans-serif'] },
+                    fontFamily: { 
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        mono: ['Fira Code', 'monospace'],
+                        inter: ['Inter', 'sans-serif']
+                    },
                     colors: { emerald: { 400: '#34d399', 500: '#10b981', 600: '#059669' }, dark: '#020617', darker: '#000000' }
                 }
             }
@@ -24,20 +29,24 @@
         .text-gradient { background: linear-gradient(to right, #34d399, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
         /* Editor Styles */
-        .editable-block { border: 2px dashed transparent; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; transition: all 0.2s; position: relative; }
-        .editable-block:hover { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.05); }
-        .editable-block:focus-within { border-color: #10b981; background-color: white; outline: none; }
-        .editor-controls { display: none; position: absolute; top: -12px; right: -10px; gap: 5px; z-index: 10; }
-        .editable-block:hover .editor-controls { display: flex; }
-        .control-btn { background: #3b82f6; color: white; border-radius: 50%; width: 26px; height: 26px; text-align: center; cursor: pointer; font-size: 14px; line-height: 26px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .control-btn.del { background: #ef4444; }
+        .editable-block { border: 2px dashed transparent; padding: 1.25rem 1rem; margin-bottom: 0.5rem; transition: all 0.2s; position: relative; border-radius: 6px; }
+        .editable-block:hover { border-color: #3b82f6; }
+        .editable-block.editing { border-color: #10b981; outline: none; }
         
+        .editor-controls { display: none; position: absolute; top: -14px; right: 10px; gap: 4px; z-index: 20; }
+        .editable-block:hover .editor-controls { display: flex; }
+        .control-btn { background: #3b82f6; color: white; border-radius: 50%; width: 28px; height: 28px; text-align: center; cursor: pointer; font-size: 13px; line-height: 28px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.1s; }
+        .control-btn:hover { transform: scale(1.1); }
+        .control-btn.del { background: #ef4444; }
+        .control-btn.theme { background: #8b5cf6; }
+        .control-btn.clone { background: #10b981; }
+
+        img.active-image { outline: 4px solid #3b82f6; border-radius: 4px; }
         [contenteditable]:empty:before { content: attr(placeholder); color: #9ca3af; pointer-events: none; display: block; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
 
-    <!-- INPUT FILE TERSEMBUNYI UNTUK UPLOAD GAMBAR -->
     <input type="file" id="imageUploader" accept="image/*" class="hidden" onchange="processImageUpload(event)">
 
     <!-- TOAST NOTIFICATION -->
@@ -64,11 +73,10 @@
                     <button onclick="toggleMenu()" class="p-2 text-emerald-400 hover:text-emerald-300">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
-                    <!-- Teks Navigasi sudah bersih dari < /> -->
                     <h1 class="text-2xl font-bold text-white tracking-wider" id="navLogo">Portofolio</h1>
                 </div>
                 <div>
-                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-sm bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition font-semibold">Admin Login</button>
+                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-sm bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition font-semibold shadow-lg">Admin Login</button>
                     <div id="adminControls" class="hidden flex gap-2 flex-wrap justify-end">
                         <button onclick="showModal('settingsModal')" class="text-sm bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg">⚙️ Setting Web</button>
                         <button onclick="openEditor()" class="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg">➕ Proyek Baru</button>
@@ -78,16 +86,15 @@
             </div>
         </nav>
 
-        <!-- Header / Profil -->
+        <!-- Header Profil -->
         <header class="relative pt-32 pb-20 px-4 text-center min-h-[80vh] flex flex-col justify-center items-center">
             <div class="absolute inset-0 z-[-1]">
                 <img id="bgImgDisplay" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1920&q=80" class="w-full h-full object-cover opacity-20">
                 <div class="absolute inset-0 bg-gradient-to-b from-transparent to-dark"></div>
             </div>
             <div class="relative inline-block mb-8">
-                <img id="profileImgDisplay" src="https://ui-avatars.com/api/?name=Nathanael&background=10b981&color=fff&size=150" class="w-40 h-40 rounded-full border-4 border-emerald-500 object-cover shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+                <img id="profileImgDisplay" src="https://ui-avatars.com/api/?name=NA&background=10b981&color=fff&size=150" class="w-40 h-40 rounded-full border-4 border-emerald-500 object-cover shadow-[0_0_30px_rgba(16,185,129,0.5)]">
             </div>
-            <!-- Teks System. sudah dihapus -->
             <h2 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight" id="nameDisplay">
                 <span class="text-white" id="displayNameText">Nama Saya</span> 
                 <span class="text-gradient" id="displayRoleText">Posisi</span>
@@ -97,18 +104,18 @@
             </p>
         </header>
 
-        <!-- Portofolio Grid -->
+        <!-- Grid Portofolio -->
         <main class="flex-grow max-w-7xl mx-auto px-4 pb-24 w-full">
             <div class="flex items-center gap-4 mb-12">
                 <div class="h-px bg-emerald-600 flex-grow opacity-30"></div>
-                <h3 class="text-3xl font-bold text-white uppercase tracking-widest">Inisialisasi <span class="text-emerald-500">Proyek</span></h3>
+                <h3 class="text-3xl font-bold text-white uppercase tracking-widest">Koleksi <span class="text-emerald-500">Proyek</span></h3>
                 <div class="h-px bg-emerald-600 flex-grow opacity-30"></div>
             </div>
             <div id="portfolioGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
         </main>
     </div>
 
-    <!-- PENGATURAN WEB (Global Settings Modal) -->
+    <!-- PENGATURAN WEB (Global Settings) -->
     <div id="settingsModal" class="fixed inset-0 bg-black/90 flex items-center justify-center hidden z-50 backdrop-blur-md">
         <div class="card-glass p-8 rounded-2xl w-full max-w-md relative border-purple-900 shadow-2xl h-max overflow-y-auto">
             <button onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
@@ -119,101 +126,164 @@
                 <div><label class="text-xs text-gray-400">Deskripsi Bio Singkat</label><textarea id="set_bio" class="w-full p-2 mt-1 rounded bg-dark border border-gray-700 text-white h-20"></textarea></div>
                 
                 <div class="p-3 border border-gray-700 rounded bg-dark/50">
-                    <label class="text-xs text-gray-400 block mb-2">Ganti Foto Profil (Upload)</label>
-                    <button onclick="triggerUpload('profile')" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm w-full">Pilih Gambar dari Perangkat</button>
-                    <img id="preview_profile" class="h-16 mt-2 hidden rounded-full mx-auto">
+                    <label class="text-xs text-gray-400 block mb-2">Ganti Foto Profil</label>
+                    <button onclick="triggerUpload('profile')" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm w-full transition">Pilih Gambar</button>
+                    <img id="preview_profile" class="h-16 mt-2 hidden rounded-full mx-auto border border-gray-500">
                 </div>
                 
                 <div class="p-3 border border-gray-700 rounded bg-dark/50">
-                    <label class="text-xs text-gray-400 block mb-2">Ganti Background Utama (Upload)</label>
-                    <button onclick="triggerUpload('bg')" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm w-full">Pilih Gambar dari Perangkat</button>
-                    <img id="preview_bg" class="h-16 mt-2 hidden w-full object-cover rounded">
+                    <label class="text-xs text-gray-400 block mb-2">Ganti Background Utama</label>
+                    <button onclick="triggerUpload('bg')" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm w-full transition">Pilih Gambar</button>
+                    <img id="preview_bg" class="h-16 mt-2 hidden w-full object-cover rounded border border-gray-500">
                 </div>
 
-                <button onclick="saveGlobalSettings()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition mt-4">Simpan Pengaturan</button>
+                <button onclick="saveGlobalSettings()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition mt-4 shadow-lg">Simpan Pengaturan</button>
             </div>
         </div>
     </div>
 
     <!-- GOOGLE SITES EDITOR LENGKAP -->
     <div id="siteEditor" class="fixed inset-0 bg-white z-50 hidden flex-col">
-        <div class="h-14 border-b flex justify-between items-center px-4 bg-white text-black shadow-sm">
+        <div class="h-14 border-b flex justify-between items-center px-4 bg-white text-black shadow-sm z-20">
             <div class="flex items-center gap-4">
-                <button onclick="closeEditor()" class="text-gray-500 hover:text-black font-bold">← Batal</button>
-                <span class="font-semibold text-lg text-gray-700">Google Sites Style Editor</span>
+                <button onclick="closeEditor()" class="text-gray-500 hover:text-black font-bold">← Keluar</button>
+                <span class="font-semibold text-lg text-gray-700 border-l border-gray-300 pl-4">Editor Proyek</span>
             </div>
-            <button onclick="publishProject()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium text-sm transition">Publikasikan</button>
+            <button onclick="publishProject()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium text-sm transition shadow">Simpan & Publikasikan</button>
         </div>
 
         <div class="flex flex-1 overflow-hidden bg-gray-100 text-black">
-            <!-- Workspace / Canvas -->
-            <div class="flex-1 overflow-y-auto p-4 md:p-10 flex flex-col items-center relative">
+            <!-- Workspace Canvas -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center relative" id="workspaceContainer" onclick="handleWorkspaceClick(event)">
                 
-                <!-- Toolbar Teks (Floating) -->
-                <div id="textToolbar" class="hidden bg-white border border-gray-300 shadow-lg rounded p-1 sticky top-4 z-20 gap-1 justify-center mb-4 flex">
-                    <button onclick="document.execCommand('bold',false,null)" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">B</button>
-                    <button onclick="document.execCommand('italic',false,null)" class="px-2 py-1 hover:bg-gray-200 italic rounded">I</button>
-                    <button onclick="document.execCommand('underline',false,null)" class="px-2 py-1 hover:bg-gray-200 underline rounded">U</button>
-                    <div class="w-px bg-gray-300 mx-1"></div>
-                    <button onclick="document.execCommand('formatBlock', false, 'H2')" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">H2</button>
-                    <button onclick="document.execCommand('formatBlock', false, 'H3')" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">H3</button>
-                    <button onclick="document.execCommand('formatBlock', false, 'P')" class="px-2 py-1 hover:bg-gray-200 rounded">P</button>
-                    <div class="w-px bg-gray-300 mx-1"></div>
-                    <button onclick="document.execCommand('insertUnorderedList',false,null)" class="px-2 py-1 hover:bg-gray-200 rounded">• List</button>
+                <!-- TOOLBAR TEKS LENGKAP (FITUR BARU) -->
+                <div id="textToolbar" class="hidden bg-gray-900 text-white shadow-2xl rounded-xl p-2 fixed top-16 z-40 gap-1.5 justify-center flex flex-wrap items-center transition-opacity border border-gray-700 max-w-2xl">
+                    <!-- Jenis Font -->
+                    <select onchange="formatDoc('fontName', this.value)" class="bg-gray-800 text-white text-xs p-1.5 rounded border border-gray-600 outline-none cursor-pointer hover:bg-gray-700" title="Jenis Font">
+                        <option value="Space Grotesk">Space Grotesk</option>
+                        <option value="Inter">Inter</option>
+                        <option value="Playfair Display">Serif</option>
+                        <option value="Fira Code">Monospace</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Impact">Impact</option>
+                    </select>
+
+                    <!-- Ukuran Font -->
+                    <select onchange="formatDoc('fontSize', this.value)" class="bg-gray-800 text-white text-xs p-1.5 rounded border border-gray-600 outline-none cursor-pointer hover:bg-gray-700" title="Ukuran Font">
+                        <option value="1">Sangat Kecil</option>
+                        <option value="2">Kecil</option>
+                        <option value="3" selected>Normal</option>
+                        <option value="4">Sedang</option>
+                        <option value="5">Besar</option>
+                        <option value="6">Sangat Besar</option>
+                        <option value="7">Judul Raksasa</option>
+                    </select>
+
+                    <div class="w-px h-5 bg-gray-700 mx-0.5"></div>
+
+                    <!-- Warna Teks & Highlight -->
+                    <label class="flex items-center gap-1 cursor-pointer bg-gray-800 hover:bg-gray-700 p-1.5 rounded border border-gray-600 text-xs" title="Warna Teks">
+                        <span>🎨 Teks</span>
+                        <input type="color" onchange="formatDoc('foreColor', this.value)" class="w-4 h-4 rounded cursor-pointer border-0 bg-transparent p-0">
+                    </label>
+
+                    <label class="flex items-center gap-1 cursor-pointer bg-gray-800 hover:bg-gray-700 p-1.5 rounded border border-gray-600 text-xs" title="Warna Highlight/Sorotan">
+                        <span>🖌️ Latar</span>
+                        <input type="color" onchange="formatDoc('hiliteColor', this.value)" class="w-4 h-4 rounded cursor-pointer border-0 bg-transparent p-0">
+                    </label>
+
+                    <div class="w-px h-5 bg-gray-700 mx-0.5"></div>
+
+                    <!-- Style Teks -->
+                    <button onclick="formatDoc('bold')" class="px-2 py-1 hover:bg-gray-700 font-bold rounded" title="Cetak Tebal">B</button>
+                    <button onclick="formatDoc('italic')" class="px-2 py-1 hover:bg-gray-700 italic rounded" title="Cetak Miring">I</button>
+                    <button onclick="formatDoc('underline')" class="px-2 py-1 hover:bg-gray-700 underline rounded" title="Garis Bawah">U</button>
+
+                    <div class="w-px h-5 bg-gray-700 mx-0.5"></div>
+
+                    <!-- Rata Teks -->
+                    <button onclick="formatDoc('justifyLeft')" class="px-2 py-1 hover:bg-gray-700 rounded" title="Rata Kiri">⇤</button>
+                    <button onclick="formatDoc('justifyCenter')" class="px-2 py-1 hover:bg-gray-700 rounded" title="Rata Tengah">↔</button>
+                    <button onclick="formatDoc('justifyRight')" class="px-2 py-1 hover:bg-gray-700 rounded" title="Rata Kanan">⇥</button>
+
+                    <div class="w-px h-5 bg-gray-700 mx-0.5"></div>
+
+                    <!-- Format Lain -->
+                    <button onclick="formatDoc('insertUnorderedList')" class="px-2 py-1 hover:bg-gray-700 rounded text-xs" title="Daftar Bulat">• List</button>
+                    <button onclick="addLink()" class="px-2 py-1 hover:bg-gray-700 rounded text-blue-300 font-bold text-xs" title="Sisipkan Link">🔗 Link</button>
                 </div>
 
-                <div class="w-full max-w-4xl bg-white shadow-md min-h-screen border rounded">
-                    <!-- Judul Proyek -->
-                    <div class="w-full bg-slate-800 h-40 relative flex items-center justify-center text-white text-center rounded-t">
-                        <input type="text" id="draftTitle" placeholder="JUDUL PROYEK" class="bg-transparent text-4xl font-bold text-center border-none focus:outline-none w-full placeholder-gray-400 uppercase px-4">
+                <!-- TOOLBAR GAMBAR -->
+                <div id="imageToolbar" class="hidden bg-blue-600 text-white shadow-xl rounded-lg p-1.5 fixed top-16 z-40 gap-1 justify-center flex transition-opacity">
+                    <span class="px-2 py-1.5 text-xs font-bold opacity-75">Ukuran:</span>
+                    <button onclick="resizeImage('25%')" class="px-2.5 py-1 hover:bg-blue-700 rounded text-sm">25%</button>
+                    <button onclick="resizeImage('50%')" class="px-2.5 py-1 hover:bg-blue-700 rounded text-sm">50%</button>
+                    <button onclick="resizeImage('75%')" class="px-2.5 py-1 hover:bg-blue-700 rounded text-sm">75%</button>
+                    <button onclick="resizeImage('100%')" class="px-2.5 py-1 hover:bg-blue-700 rounded text-sm font-bold">Max</button>
+                    <div class="w-px bg-blue-400 mx-1"></div>
+                    <span class="px-2 py-1.5 text-xs font-bold opacity-75">Posisi:</span>
+                    <button onclick="alignImage('flex-start')" class="px-2.5 py-1 hover:bg-blue-700 rounded">⇤</button>
+                    <button onclick="alignImage('center')" class="px-2.5 py-1 hover:bg-blue-700 rounded">↔</button>
+                    <button onclick="alignImage('flex-end')" class="px-2.5 py-1 hover:bg-blue-700 rounded">⇥</button>
+                </div>
+
+                <!-- KANVAS UTAMA -->
+                <div class="w-full max-w-4xl bg-white shadow-md min-h-screen rounded-lg overflow-hidden border border-gray-200">
+                    <div class="w-full bg-slate-800 h-48 relative flex items-center justify-center text-white text-center">
+                        <input type="text" id="draftTitle" placeholder="MASUKAN JUDUL PROYEK" class="bg-transparent text-4xl md:text-5xl font-black text-center border-none focus:outline-none w-full placeholder-gray-500 uppercase px-4 z-10">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent"></div>
                     </div>
                     
-                    <!-- Area Konten -->
-                    <div id="canvasArea" class="p-6 md:p-10 min-h-[400px]" onclick="checkTextFocus(event)">
-                        <div class="text-center text-gray-400 mt-10 italic pointer-events-none" id="emptyState">Gunakan menu di kanan untuk menyisipkan elemen.</div>
+                    <div id="canvasArea" class="min-h-[500px] flex flex-col w-full bg-white">
+                        <div class="text-center text-gray-400 mt-20 italic pointer-events-none" id="emptyState">
+                            <span class="text-4xl block mb-2">📄</span>
+                            Kanvas Kosong.<br>Gunakan menu di sebelah kanan untuk menyisipkan elemen.
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Panel Kanan (Insert Menu) -->
             <div class="w-72 bg-white border-l border-gray-200 overflow-y-auto shadow-xl z-10 flex flex-col shrink-0">
-                <div class="flex border-b text-sm font-medium text-gray-600">
-                    <div class="flex-1 text-center py-3 border-b-2 border-blue-600 text-blue-600">Sisipkan</div>
-                    <div class="flex-1 text-center py-3 hover:bg-gray-50 cursor-pointer">Halaman</div>
+                <div class="flex border-b text-sm font-bold text-gray-600 bg-gray-50">
+                    <div class="flex-1 text-center py-4 border-b-2 border-blue-600 text-blue-600">Sisipkan Elemen</div>
                 </div>
 
-                <div class="p-4">
-                    <div class="grid grid-cols-2 gap-2 mb-6">
-                        <button onclick="addBlock('text')" class="flex flex-col items-center justify-center p-3 border rounded hover:bg-gray-50 hover:shadow-sm">
-                            <span class="text-blue-600 font-serif text-xl font-bold mb-1">Tt</span><span class="text-xs">Kotak Teks</span>
+                <div class="p-5">
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                        <button onclick="addBlock('text')" class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition group shadow-sm">
+                            <span class="text-blue-500 font-serif text-2xl font-bold mb-1 group-hover:scale-110 transition">Tt</span><span class="text-xs font-semibold">Teks</span>
                         </button>
-                        <button onclick="triggerUpload('block_image')" class="flex flex-col items-center justify-center p-3 border rounded hover:bg-gray-50 hover:shadow-sm">
-                            <span class="text-green-500 text-xl mb-1">🖼️</span><span class="text-xs">Gambar (Upload)</span>
-                        </button>
-                    </div>
-
-                    <div class="text-xs font-bold text-gray-500 mb-2">BLOK KONTEN</div>
-                    <div class="grid grid-cols-2 gap-2 mb-6">
-                        <button onclick="addBlock('layout_left')" class="p-2 border rounded hover:bg-gray-100 flex items-center justify-center h-14 bg-gray-50">
-                            <div class="flex w-full gap-1"><div class="w-1/2 h-8 bg-gray-300"></div><div class="w-1/2 flex flex-col gap-1"><div class="w-full h-1 bg-gray-300"></div><div class="w-3/4 h-1 bg-gray-300"></div></div></div>
-                        </button>
-                        <button onclick="addBlock('layout_right')" class="p-2 border rounded hover:bg-gray-100 flex items-center justify-center h-14 bg-gray-50">
-                            <div class="flex w-full gap-1"><div class="w-1/2 flex flex-col gap-1"><div class="w-full h-1 bg-gray-300"></div><div class="w-3/4 h-1 bg-gray-300"></div></div><div class="w-1/2 h-8 bg-gray-300"></div></div>
+                        <button onclick="triggerUpload('block_image')" class="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition group shadow-sm">
+                            <span class="text-green-500 text-2xl mb-1 group-hover:scale-110 transition">🖼️</span><span class="text-xs font-semibold">Gambar</span>
                         </button>
                     </div>
 
-                    <div class="text-xs font-bold text-gray-500 mb-2">ELEMEN LAIN</div>
-                    <div class="space-y-2 mb-6">
-                        <button onclick="addBlock('divider')" class="w-full p-2 border rounded hover:bg-gray-50 text-left text-sm flex items-center gap-2">➖ Pembatas (Divider)</button>
-                        <button onclick="addBlock('button')" class="w-full p-2 border rounded hover:bg-gray-50 text-left text-sm flex items-center gap-2">🔗 Tombol Link</button>
-                        <button onclick="addBlock('youtube')" class="w-full p-2 border rounded hover:bg-gray-50 text-left text-sm flex items-center gap-2">▶️ Video YouTube</button>
+                    <div class="text-xs font-bold text-gray-400 mb-3 tracking-widest uppercase">Tata Letak (Layout)</div>
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                        <button onclick="addBlock('layout_left')" class="p-2 border border-gray-200 rounded-lg hover:bg-gray-100 flex items-center justify-center h-16 bg-gray-50 transition shadow-sm">
+                            <div class="flex w-full gap-1.5 px-1"><div class="w-1/2 h-8 bg-blue-200 rounded-sm"></div><div class="w-1/2 flex flex-col gap-1.5"><div class="w-full h-1.5 bg-gray-300 rounded-full"></div><div class="w-3/4 h-1.5 bg-gray-300 rounded-full"></div></div></div>
+                        </button>
+                        <button onclick="addBlock('layout_right')" class="p-2 border border-gray-200 rounded-lg hover:bg-gray-100 flex items-center justify-center h-16 bg-gray-50 transition shadow-sm">
+                            <div class="flex w-full gap-1.5 px-1"><div class="w-1/2 flex flex-col gap-1.5"><div class="w-full h-1.5 bg-gray-300 rounded-full"></div><div class="w-3/4 h-1.5 bg-gray-300 rounded-full"></div></div><div class="w-1/2 h-8 bg-blue-200 rounded-sm"></div></div>
+                        </button>
                     </div>
 
-                    <div class="p-3 bg-blue-50 border border-blue-100 rounded text-xs text-gray-700">
-                        <b>Menu Navigasi Sidebar:</b><br>
-                        <input type="text" id="newMenuName" placeholder="Nama Menu (cth: GitHub)" class="w-full mt-2 p-1.5 border rounded bg-white">
-                        <input type="text" id="newMenuUrl" placeholder="URL (cth: https://github.com/)" class="w-full mt-2 p-1.5 border rounded bg-white">
-                        <button onclick="addMenu()" class="mt-2 bg-blue-600 text-white px-3 py-1.5 rounded w-full font-bold">Tambah Menu</button>
+                    <div class="text-xs font-bold text-gray-400 mb-3 tracking-widest uppercase">Fitur Spesial</div>
+                    <div class="space-y-2.5 mb-8">
+                        <button onclick="addBlock('collapsible')" class="w-full p-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-left text-sm flex items-center gap-2.5 shadow-sm font-medium transition"><span class="text-amber-500">📁</span> Teks Terlipat (Collapsible)</button>
+                        <button onclick="addBlock('callout')" class="w-full p-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-left text-sm flex items-center gap-2.5 shadow-sm font-medium transition"><span class="text-blue-500">💡</span> Kotak Sorotan (Callout)</button>
+                        <button onclick="addBlock('button')" class="w-full p-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-left text-sm flex items-center gap-2.5 shadow-sm font-medium transition"><span class="text-indigo-500">🔗</span> Tombol Link</button>
+                        <button onclick="addBlock('youtube')" class="w-full p-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-left text-sm flex items-center gap-2.5 shadow-sm font-medium transition"><span class="text-red-500">▶️</span> Video YouTube</button>
+                        <button onclick="addBlock('divider')" class="w-full p-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-left text-sm flex items-center gap-2.5 shadow-sm font-medium transition"><span class="text-gray-400">➖</span> Garis Pembatas</button>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg shadow-inner">
+                        <div class="text-xs font-bold text-slate-500 mb-2">NAVIGASI SIDEBAR</div>
+                        <input type="text" id="newMenuName" placeholder="Nama Menu (cth: GitHub)" class="w-full mt-1 p-2 border border-gray-300 rounded text-sm focus:border-blue-500 focus:outline-none">
+                        <input type="text" id="newMenuUrl" placeholder="URL Target" class="w-full mt-2 p-2 border border-gray-300 rounded text-sm focus:border-blue-500 focus:outline-none">
+                        <button onclick="addMenu()" class="mt-3 bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded w-full font-bold text-sm transition">Tambah Menu</button>
                     </div>
                 </div>
             </div>
@@ -225,9 +295,9 @@
         <div class="card-glass p-8 rounded-2xl w-96 relative border-emerald-900 shadow-2xl">
             <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
             <h3 class="text-2xl font-bold mb-6 text-center text-white">Admin Login</h3>
-            <input type="text" id="username" placeholder="Username" class="w-full mb-4 p-3 rounded bg-dark text-white border border-gray-700">
-            <input type="password" id="password" placeholder="Password" class="w-full mb-6 p-3 rounded bg-dark text-white border border-gray-700">
-            <button onclick="attemptLogin()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition">LOGIN</button>
+            <input type="text" id="username" placeholder="Username" class="w-full mb-4 p-3 rounded bg-dark text-white border border-gray-700 focus:border-emerald-500 outline-none">
+            <input type="password" id="password" placeholder="Password" class="w-full mb-6 p-3 rounded bg-dark text-white border border-gray-700 focus:border-emerald-500 outline-none">
+            <button onclick="attemptLogin()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition shadow-lg">LOGIN</button>
         </div>
     </div>
 
@@ -238,27 +308,23 @@
         
         let currentEditProjectId = null;
         let uploadTarget = null;
+        let activeImageEl = null;
 
-        // Data Storage
         let siteSettings = JSON.parse(localStorage.getItem('tech_settings')) || {
-            name: "Portofolio Christofan", role: "Web Developer", bio: "Mengubah baris kode menjadi solusi digital yang elegan.",
+            name: "Portofolio", role: "Web Developer", bio: "Mengubah baris kode menjadi solusi digital yang elegan.",
             bg: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1920&q=80",
             profile: "https://ui-avatars.com/api/?name=NA&background=10b981&color=fff&size=150"
         };
         let projects = JSON.parse(localStorage.getItem('tech_projects')) || [];
         let menuItems = JSON.parse(localStorage.getItem('tech_menus')) || [{ id: 1, name: "Home", url: "#" }];
 
-        // --- SISTEM TOAST NOTIFICATION ---
         function showToast(message) {
             const toast = document.getElementById('toastNotification');
             document.getElementById('toastMessage').innerText = message;
             toast.classList.remove('translate-x-full');
-            setTimeout(() => {
-                toast.classList.add('translate-x-full');
-            }, 3000); // Hilang otomatis setelah 3 detik
+            setTimeout(() => { toast.classList.add('translate-x-full'); }, 3000);
         }
 
-        // --- SISTEM UPLOAD GAMBAR DARI PERANGKAT ---
         function triggerUpload(target) {
             uploadTarget = target;
             document.getElementById('imageUploader').click();
@@ -273,19 +339,15 @@
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
+                    const MAX_WIDTH = 1000;
                     let width = img.width;
                     let height = img.height;
 
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                    canvas.width = width;
-                    canvas.height = height;
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    const base64String = canvas.toDataURL('image/jpeg', 0.7);
+                    const base64String = canvas.toDataURL('image/jpeg', 0.8);
 
                     if (uploadTarget === 'profile') {
                         document.getElementById('preview_profile').src = base64String;
@@ -302,18 +364,14 @@
             reader.readAsDataURL(file);
         }
 
-        // --- MANAJEMEN TAMPILAN UTAMA & PENGATURAN GLOBAL ---
         function applyGlobalSettings() {
-            // Teks Navigasi dan Judul Bersih
             document.getElementById('navLogo').innerText = siteSettings.name;
             document.getElementById('displayNameText').innerText = siteSettings.name;
             document.getElementById('displayRoleText').innerText = siteSettings.role;
-            
             document.getElementById('bioDisplay').innerText = siteSettings.bio;
             document.getElementById('bgImgDisplay').src = siteSettings.bg;
             document.getElementById('profileImgDisplay').src = siteSettings.profile;
 
-            // Form Pengaturan
             document.getElementById('set_name').value = siteSettings.name;
             document.getElementById('set_role').value = siteSettings.role;
             document.getElementById('set_bio').value = siteSettings.bio;
@@ -346,7 +404,7 @@
             const menuList = document.getElementById('menuList');
             menuList.innerHTML = '';
             menuItems.forEach(item => {
-                menuList.innerHTML += `<li class="flex justify-between items-center group"><a href="${item.url}" class="block w-full p-2 hover:bg-emerald-900/40 rounded">${item.name}</a> ${isAdmin ? `<button onclick="deleteMenu(${item.id})" class="text-red-500 text-xs hidden group-hover:block px-2">Del</button>` : ''}</li>`;
+                menuList.innerHTML += `<li class="flex justify-between items-center group"><a href="${item.url}" class="block w-full p-2 hover:bg-emerald-900/40 rounded transition">${item.name}</a> ${isAdmin ? `<button onclick="deleteMenu(${item.id})" class="text-red-400 text-xs hidden group-hover:block px-2 hover:text-red-300">Hapus</button>` : ''}</li>`;
             });
 
             const grid = document.getElementById('portfolioGrid');
@@ -354,20 +412,19 @@
             projects.forEach(proj => {
                 grid.innerHTML += `
                     <div class="card-glass rounded-xl overflow-hidden hover:-translate-y-2 transition duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex flex-col group relative">
-                        <div class="h-48 overflow-hidden relative">
-                            <div class="absolute inset-0 bg-emerald-500/20 mix-blend-overlay group-hover:opacity-0 transition z-10"></div>
+                        <div class="h-56 overflow-hidden relative border-b border-gray-800">
+                            <div class="absolute inset-0 bg-emerald-500/10 mix-blend-overlay group-hover:opacity-0 transition z-10"></div>
                             <img src="${proj.coverImage}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-500">
                         </div>
                         <div class="p-6 flex-grow bg-white/5 group-hover:bg-white/10 transition">
-                            <h3 class="text-xl font-bold mb-3 text-emerald-400 uppercase tracking-wide">${proj.title}</h3>
-                            <div class="text-gray-300 text-sm line-clamp-3 prose prose-invert w-full">${proj.cleanHTML.replace(/<[^>]+>/g, '').substring(0, 150)}...</div>
+                            <h3 class="text-xl font-bold mb-3 text-emerald-400 uppercase tracking-wide line-clamp-1">${proj.title}</h3>
+                            <div class="text-gray-400 text-sm line-clamp-3 leading-relaxed">${proj.cleanHTML.replace(/<[^>]+>/g, '').substring(0, 150)}...</div>
                         </div>
-                        
-                        <div class="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition z-20 gap-2 backdrop-blur-sm">
-                            <button onclick="viewProject(${proj.id})" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold">Lihat Detail</button>
+                        <div class="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition z-20 gap-3 backdrop-blur-sm">
+                            <button onclick="viewProject(${proj.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg font-bold shadow-lg transition">Lihat</button>
                             ${isAdmin ? `
-                                <button onclick="editProject(${proj.id})" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">Edit</button>
-                                <button onclick="deleteProject(${proj.id})" class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold">Hapus</button>
+                                <button onclick="editProject(${proj.id})" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg font-bold shadow-lg transition">Edit</button>
+                                <button onclick="deleteProject(${proj.id})" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2.5 rounded-lg font-bold shadow-lg transition">Del</button>
                             ` : ''}
                         </div>
                     </div>
@@ -380,47 +437,100 @@
         
         function attemptLogin() {
             if (document.getElementById('username').value === ADMIN_USER && document.getElementById('password').value === ADMIN_PASS) {
-                isAdmin = true;
-                closeModal('loginModal');
+                isAdmin = true; closeModal('loginModal');
                 document.getElementById('loginBtn').classList.add('hidden');
                 document.getElementById('adminControls').classList.remove('hidden');
-                renderData();
-                showToast('Login Berhasil, Selamat Datang Admin!');
-            } else { alert('Akses Ditolak! Cek Username / Password.'); }
+                renderData(); showToast('Login Berhasil, Selamat Datang!');
+            } else { alert('Username / Password Salah!'); }
         }
 
         function logout() {
             isAdmin = false;
             document.getElementById('loginBtn').classList.remove('hidden');
             document.getElementById('adminControls').classList.add('hidden');
-            renderData();
-            showToast('Anda Telah Logout.');
+            renderData(); showToast('Anda Telah Logout.');
         }
 
         // --- SISTEM EDITOR GOOGLE SITES ---
         function openEditor() {
-            document.getElementById('siteEditor').classList.remove('hidden');
-            document.getElementById('siteEditor').classList.add('flex');
+            document.getElementById('siteEditor').classList.remove('hidden'); document.getElementById('siteEditor').classList.add('flex');
             currentEditProjectId = null;
             document.getElementById('draftTitle').value = '';
-            document.getElementById('canvasArea').innerHTML = '<div class="text-center text-gray-400 mt-10 italic pointer-events-none" id="emptyState">Gunakan menu di kanan untuk menyisipkan elemen.</div>';
+            document.getElementById('canvasArea').innerHTML = '<div class="text-center text-gray-400 mt-20 italic pointer-events-none" id="emptyState"><span class="text-4xl block mb-2">📄</span>Kanvas Kosong.<br>Gunakan menu di sebelah kanan untuk menyisipkan elemen.</div>';
         }
 
         function closeEditor() { document.getElementById('siteEditor').classList.add('hidden'); document.getElementById('siteEditor').classList.remove('flex'); }
 
-        function checkTextFocus(e) {
-            const tb = document.getElementById('textToolbar');
-            if(e.target.hasAttribute('contenteditable')) {
-                tb.classList.remove('hidden');
+        function formatDoc(cmd, val=null) { document.execCommand(cmd, false, val); }
+        function addLink() {
+            const url = prompt("Masukkan Link Target (cth: https://google.com):");
+            if(url) formatDoc('createLink', url);
+        }
+
+        function handleWorkspaceClick(e) {
+            const tbText = document.getElementById('textToolbar');
+            const tbImage = document.getElementById('imageToolbar');
+            
+            document.querySelectorAll('#canvasArea img').forEach(img => img.classList.remove('active-image'));
+            activeImageEl = null;
+
+            if (e.target.tagName === 'IMG' && e.target.closest('.editable-block')) {
+                tbText.classList.add('hidden');
+                tbImage.classList.remove('hidden');
+                activeImageEl = e.target;
+                activeImageEl.classList.add('active-image');
+            } else if (e.target.hasAttribute('contenteditable') || e.target.closest('[contenteditable]')) {
+                tbImage.classList.add('hidden');
+                tbText.classList.remove('hidden');
             } else {
-                tb.classList.add('hidden');
+                tbText.classList.add('hidden');
+                tbImage.classList.add('hidden');
+            }
+        }
+
+        function resizeImage(size) {
+            if (activeImageEl) {
+                activeImageEl.style.width = size;
+                activeImageEl.style.height = 'auto';
+            }
+        }
+
+        function alignImage(position) {
+            if (activeImageEl) {
+                const wrapper = activeImageEl.closest('.flex-img-wrapper') || activeImageEl.parentElement;
+                if(wrapper) {
+                    wrapper.style.display = 'flex';
+                    wrapper.style.justifyContent = position;
+                }
             }
         }
 
         function hideEmptyState() { const es = document.getElementById('emptyState'); if(es) es.remove(); }
 
+        function cycleTheme(el) {
+            const block = el.closest('.editable-block');
+            if(block.classList.contains('bg-gray-100')) {
+                block.classList.remove('bg-gray-100'); block.classList.add('bg-slate-800', 'text-white');
+            } else if(block.classList.contains('bg-slate-800')) {
+                block.classList.remove('bg-slate-800', 'text-white');
+            } else {
+                block.classList.add('bg-gray-100');
+            }
+        }
+
+        function duplicateBlock(el) {
+            const block = el.closest('.editable-block');
+            const clone = block.cloneNode(true);
+            const newId = Date.now();
+            clone.id = `block-${newId}`;
+            block.parentNode.insertBefore(clone, block.nextSibling);
+            showToast("Blok Berhasil Diduplikat!");
+        }
+
         function getControlsHTML() {
             return `<div class="editor-controls">
+                        <div onclick="cycleTheme(this)" class="control-btn theme" title="Ubah Warna Latar Blok">🎨</div>
+                        <div onclick="duplicateBlock(this)" class="control-btn clone" title="Duplikat Blok">📋</div>
                         <div onclick="moveUp(this)" class="control-btn" title="Pindah Atas">↑</div>
                         <div onclick="moveDown(this)" class="control-btn" title="Pindah Bawah">↓</div>
                         <div onclick="this.parentElement.parentElement.remove()" class="control-btn del" title="Hapus Blok">✕</div>
@@ -433,25 +543,35 @@
         function addBlock(type) {
             hideEmptyState();
             const id = Date.now();
-            let html = `<div id="block-${id}" class="editable-block group w-full">${getControlsHTML()}`;
+            let html = `<div id="block-${id}" class="editable-block group w-full bg-white">${getControlsHTML()}`;
 
             if(type === 'text') {
-                html += `<div contenteditable="true" placeholder="Ketik teks di sini..." class="w-full text-lg outline-none min-h-[60px] p-2 break-words"></div>`;
+                html += `<div contenteditable="true" placeholder="Ketik teks di sini..." class="w-full text-lg outline-none min-h-[60px] p-2"></div>`;
+            } else if (type === 'collapsible') {
+                html += `<details class="w-full border border-gray-300 rounded-lg p-3 my-2 bg-gray-50 transition">
+                            <summary class="font-bold cursor-pointer text-lg outline-none text-gray-800" contenteditable="true">Judul Lipatan / Collapsible Header</summary>
+                            <div contenteditable="true" placeholder="Isi teks yang disembunyikan di sini..." class="mt-3 pt-3 border-t border-gray-200 outline-none text-base text-gray-700 min-h-[50px]"></div>
+                        </details>`;
+            } else if (type === 'callout') {
+                html += `<div class="w-full p-4 border-l-4 border-blue-500 bg-blue-50/80 rounded-r-lg my-2 flex gap-3 items-start">
+                            <span class="text-2xl select-none">💡</span>
+                            <div contenteditable="true" placeholder="Tulis catatan penting atau callout di sini..." class="w-full outline-none text-slate-800 text-base min-h-[40px]"></div>
+                        </div>`;
             } else if (type === 'divider') {
-                html += `<hr class="border-t-2 border-gray-300 my-4 w-full">`;
+                html += `<hr class="border-t-2 border-gray-300 my-6 w-full opacity-60">`;
             } else if (type === 'button') {
                 const btnText = prompt("Teks Tombol:") || "Klik Disini";
-                const btnUrl = prompt("URL Tujuan (cth: https://google.com):") || "#";
-                html += `<div class="text-center w-full"><a href="${btnUrl}" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-full font-bold uppercase cursor-pointer" contenteditable="false">${btnText}</a></div>`;
+                const btnUrl = prompt("URL Tujuan:") || "#";
+                html += `<div class="flex justify-center w-full my-4"><a href="${btnUrl}" target="_blank" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-full font-bold uppercase cursor-pointer hover:bg-blue-500 transition shadow-md" contenteditable="false">${btnText}</a></div>`;
             } else if (type === 'youtube') {
-                const ytUrl = prompt("Masukkan URL YouTube:");
+                const ytUrl = prompt("Masukkan URL YouTube (Contoh: https://www.youtube.com/watch?v=...)");
                 if(!ytUrl) return;
                 const videoId = ytUrl.split('v=')[1]?.substring(0, 11) || ytUrl.split('youtu.be/')[1]?.substring(0, 11);
-                html += `<div class="w-full flex justify-center"><iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen class="rounded shadow-lg"></iframe></div>`;
+                html += `<div class="w-full flex justify-center my-4"><iframe width="640" height="360" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen class="rounded-lg shadow-lg max-w-full"></iframe></div>`;
             } else if (type === 'layout_left') {
-                html += `<div class="flex flex-col md:flex-row gap-6 w-full"><div class="w-full md:w-1/2 min-h-[150px] bg-gray-200 rounded flex items-center justify-center text-gray-400 border cursor-pointer" onclick="replacePlaceholderImage(this)">Klik Untuk Ganti URL Gambar</div><div contenteditable="true" placeholder="Ketik teks..." class="w-full md:w-1/2 outline-none p-2 min-h-[100px]"></div></div>`;
+                html += `<div class="flex flex-col md:flex-row gap-6 w-full items-center"><div class="w-full md:w-1/2 min-h-[200px] bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 cursor-pointer overflow-hidden relative group" onclick="replacePlaceholderImage(this)"><span class="group-hover:scale-110 transition flex flex-col items-center"><span>🖼️</span><span class="text-xs mt-2">Klik Ganti Gambar</span></span></div><div contenteditable="true" placeholder="Ketik deskripsi di sini..." class="w-full md:w-1/2 outline-none p-2 min-h-[150px] text-lg"></div></div>`;
             } else if (type === 'layout_right') {
-                html += `<div class="flex flex-col md:flex-row gap-6 w-full"><div contenteditable="true" placeholder="Ketik teks..." class="w-full md:w-1/2 outline-none p-2 min-h-[100px]"></div><div class="w-full md:w-1/2 min-h-[150px] bg-gray-200 rounded flex items-center justify-center text-gray-400 border cursor-pointer" onclick="replacePlaceholderImage(this)">Klik Untuk Ganti URL Gambar</div></div>`;
+                html += `<div class="flex flex-col md:flex-row gap-6 w-full items-center"><div contenteditable="true" placeholder="Ketik deskripsi di sini..." class="w-full md:w-1/2 outline-none p-2 min-h-[150px] text-lg"></div><div class="w-full md:w-1/2 min-h-[200px] bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 cursor-pointer overflow-hidden relative group" onclick="replacePlaceholderImage(this)"><span class="group-hover:scale-110 transition flex flex-col items-center"><span>🖼️</span><span class="text-xs mt-2">Klik Ganti Gambar</span></span></div></div>`;
             }
             
             html += `</div>`;
@@ -461,33 +581,38 @@
         function insertImageBlock(base64Src) {
             hideEmptyState();
             const id = Date.now();
-            const html = `<div id="block-${id}" class="editable-block group w-full">${getControlsHTML()}<img src="${base64Src}" class="w-full max-w-2xl mx-auto h-auto rounded shadow-sm" alt="Inserted Image"></div>`;
+            const html = `<div id="block-${id}" class="editable-block group w-full bg-white">${getControlsHTML()}<div class="flex-img-wrapper flex justify-center w-full my-4"><img src="${base64Src}" class="w-1/2 h-auto rounded shadow-sm cursor-pointer transition-all" alt="Image" style="width: 50%;"></div></div>`;
             document.getElementById('canvasArea').insertAdjacentHTML('beforeend', html);
         }
 
         function replacePlaceholderImage(el) {
-            const url = prompt("Masukkan URL Gambar:");
-            if(url) { el.outerHTML = `<img src="${url}" class="w-full md:w-1/2 object-cover rounded shadow">`; }
+            const url = prompt("Masukkan Link URL Gambar:");
+            if(url) { el.outerHTML = `<img src="${url}" class="w-full md:w-1/2 object-cover rounded shadow cursor-pointer active-image" style="width: 100%;">`; }
         }
 
-        // --- SISTEM SIMPAN DAN EDIT PROYEK ---
         function publishProject() {
             const title = document.getElementById('draftTitle').value;
-            if(!title) return alert("Judul Proyek wajib diisi!");
+            if(!title) return alert("⚠️ Judul Proyek di bagian atas wajib diisi!");
 
             const canvasArea = document.getElementById('canvasArea');
             const blocks = canvasArea.querySelectorAll('.editable-block');
-            if(blocks.length === 0) return alert("Kanvas kosong! Tambahkan elemen dari kanan.");
+            if(blocks.length === 0) return alert("⚠️ Kanvas kosong! Tambahkan elemen terlebih dahulu.");
+
+            canvasArea.querySelectorAll('.active-image').forEach(img => img.classList.remove('active-image'));
 
             let firstImage = "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=600&q=80";
             const imgTag = canvasArea.querySelector('img');
-            if(imgTag) firstImage = imgTag.src;
+            if(imgTag && imgTag.src.length > 100) firstImage = imgTag.src;
 
             let editorHTML = canvasArea.innerHTML;
             let cleanWrapper = document.createElement('div');
             cleanWrapper.innerHTML = editorHTML;
+            
             cleanWrapper.querySelectorAll('.editor-controls').forEach(e => e.remove());
-            cleanWrapper.querySelectorAll('.editable-block').forEach(e => e.className = "mb-6 w-full");
+            cleanWrapper.querySelectorAll('.editable-block').forEach(e => {
+                e.classList.remove('editable-block', 'group');
+                e.classList.add('w-full');
+            });
             cleanWrapper.querySelectorAll('[contenteditable]').forEach(e => {
                 e.removeAttribute('contenteditable'); e.removeAttribute('placeholder'); e.classList.remove('outline-none');
             });
@@ -508,10 +633,14 @@
                 projects.unshift(projectData);
             }
             
-            localStorage.setItem('tech_projects', JSON.stringify(projects));
-            renderData();
-            closeEditor();
-            showToast(currentEditProjectId ? "Proyek berhasil diperbarui!" : "Proyek Baru berhasil dipublikasikan!");
+            try {
+                localStorage.setItem('tech_projects', JSON.stringify(projects));
+                renderData();
+                closeEditor();
+                showToast(currentEditProjectId ? "✅ Perubahan Disimpan!" : "✅ Proyek Baru Terpublikasi!");
+            } catch(e) {
+                alert("Gagal menyimpan! Kapasitas Browser Penuh. Coba gunakan ukuran gambar yang lebih kecil.");
+            }
         }
 
         function editProject(id) {
@@ -525,11 +654,11 @@
         }
 
         function deleteProject(id) {
-            if(confirm("Hapus proyek ini selamanya?")) {
-                projects = projects.filter(p => p.id !== id);
+            if(confirm("Hapus proyek ini selamanya? Tidak bisa dibatalkan.")) {
+                projects = projects.filter(p => p.id === id);
                 localStorage.setItem('tech_projects', JSON.stringify(projects));
                 renderData();
-                showToast("Proyek berhasil dihapus.");
+                showToast("🗑️ Proyek Dihapus.");
             }
         }
 
@@ -537,16 +666,16 @@
             const proj = projects.find(p => p.id === id);
             if(!proj) return;
             const detailModal = document.createElement('div');
-            detailModal.className = "fixed inset-0 bg-black/95 z-[60] overflow-y-auto p-4 md:p-10 flex flex-col items-center backdrop-blur-md";
+            detailModal.className = "fixed inset-0 bg-black/95 z-[60] overflow-y-auto flex flex-col items-center backdrop-blur-lg animate-fade-in";
             detailModal.innerHTML = `
-                <div class="w-full max-w-4xl relative">
-                    <button onclick="this.parentElement.parentElement.remove()" class="fixed top-6 right-6 bg-red-600 text-white w-10 h-10 rounded-full font-bold text-xl flex items-center justify-center hover:bg-red-500 z-50 shadow-[0_0_20px_red]">✕</button>
-                    <div class="bg-slate-900 rounded-t-xl h-64 flex flex-col items-center justify-center text-center p-6 border-b border-emerald-500/30 relative overflow-hidden">
-                        <div class="absolute inset-0 bg-black/60 z-0"></div>
-                        <img src="${proj.coverImage}" class="absolute inset-0 w-full h-full object-cover z-[-1] blur-sm opacity-50">
-                        <h1 class="text-4xl md:text-6xl font-black text-white uppercase z-10 tracking-widest">${proj.title}</h1>
+                <div class="w-full max-w-5xl bg-white min-h-screen relative shadow-2xl">
+                    <button onclick="this.parentElement.parentElement.remove()" class="fixed top-6 right-6 lg:right-10 bg-red-600/80 hover:bg-red-500 text-white w-12 h-12 rounded-full font-bold text-2xl flex items-center justify-center z-50 shadow-[0_0_15px_rgba(239,68,68,0.5)] transition backdrop-blur-sm">✕</button>
+                    <div class="w-full bg-slate-900 h-64 md:h-80 flex items-center justify-center text-center p-6 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black/60 z-10"></div>
+                        <img src="${proj.coverImage}" class="absolute inset-0 w-full h-full object-cover z-0 blur-sm opacity-60">
+                        <h1 class="text-4xl md:text-6xl font-black text-white uppercase z-20 tracking-widest leading-tight drop-shadow-2xl">${proj.title}</h1>
                     </div>
-                    <div class="bg-white text-black p-8 md:p-14 rounded-b-xl min-h-[50vh] prose prose-lg max-w-none shadow-2xl">${proj.cleanHTML}</div>
+                    <div class="text-black p-6 md:p-14 min-h-[50vh] prose prose-lg md:prose-xl max-w-none w-full">${proj.cleanHTML}</div>
                 </div>`;
             document.body.appendChild(detailModal);
         }
@@ -554,7 +683,7 @@
         function addMenu() {
             const name = document.getElementById('newMenuName').value;
             const url = document.getElementById('newMenuUrl').value || '#';
-            if(!name) return alert("Nama menu wajib diisi!");
+            if(!name) return alert("Isi nama menu terlebih dahulu.");
             menuItems.push({ id: Date.now(), name, url });
             localStorage.setItem('tech_menus', JSON.stringify(menuItems));
             document.getElementById('newMenuName').value = ''; document.getElementById('newMenuUrl').value = '';
@@ -562,10 +691,9 @@
         }
 
         function deleteMenu(id) {
-            if(confirm("Hapus menu ini?")) { menuItems = menuItems.filter(m => m.id !== id); localStorage.setItem('tech_menus', JSON.stringify(menuItems)); renderData(); }
+            if(confirm("Hapus link menu ini?")) { menuItems = menuItems.filter(m => m.id !== id); localStorage.setItem('tech_menus', JSON.stringify(menuItems)); renderData(); }
         }
 
-        // INIT
         applyGlobalSettings();
         renderData();
     </script>
