@@ -45,7 +45,7 @@
         [contenteditable]:empty:before { content: attr(placeholder); color: #9ca3af; pointer-events: none; display: block; }
     </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col">
+<body class="antialiased min-h-screen flex flex-col justify-between">
 
     <input type="file" id="imageUploader" accept="image/*" class="hidden" onchange="processImageUpload(event)">
 
@@ -55,67 +55,133 @@
         <span id="toastMessage" class="font-bold text-sm md:text-base">Berhasil!</span>
     </div>
 
-    <!-- HALAMAN UTAMA PUBLIK -->
-    <div id="publicView">
+    <!-- MAIN PUBLIC VIEW -->
+    <div id="publicView" class="flex-grow flex flex-col">
+        <!-- Overlay Sidebar -->
         <div id="sidebarOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/60 z-40 hidden backdrop-blur-sm"></div>
-        <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-darker border-r border-emerald-900/50 z-50 transform -translate-x-full flex flex-col transition-transform duration-300">
+        
+        <!-- Sidebar Navigation Drawer -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-darker border-r border-emerald-900/50 z-50 transform -translate-x-full flex flex-col transition-transform duration-300 shadow-2xl">
             <div class="p-6 border-b border-emerald-900/50 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-emerald-400">Navigasi</h2>
+                <h2 class="text-xl font-bold text-emerald-400 tracking-wider">NAVIGASI</h2>
                 <button onclick="toggleMenu()" class="text-gray-400 hover:text-white text-2xl">✕</button>
             </div>
-            <ul id="menuList" class="p-4 flex-grow space-y-2 overflow-y-auto text-gray-300"></ul>
+            
+            <nav class="p-4 flex-grow space-y-2 overflow-y-auto text-gray-300">
+                <button onclick="switchPage('home')" class="w-full text-left px-4 py-3 rounded-lg font-semibold hover:bg-emerald-900/40 hover:text-emerald-400 transition flex items-center gap-3">
+                    <span>🏠</span> Beranda
+                </button>
+                <button onclick="switchPage('profile')" class="w-full text-left px-4 py-3 rounded-lg font-semibold hover:bg-emerald-900/40 hover:text-emerald-400 transition flex items-center gap-3">
+                    <span>👤</span> Profil Diri
+                </button>
+                <button onclick="switchPage('projects')" class="w-full text-left px-4 py-3 rounded-lg font-semibold hover:bg-emerald-900/40 hover:text-emerald-400 transition flex items-center gap-3">
+                    <span>🚀</span> Proyek
+                </button>
+                
+                <hr class="border-emerald-900/40 my-4">
+                
+                <!-- Menu Dinamis dari Admin -->
+                <div id="customMenuList" class="space-y-1"></div>
+            </nav>
+
+            <!-- Bottom Sidebar Controls (LOGIN / ADMIN AREA) -->
+            <div class="p-4 border-t border-emerald-900/50 bg-slate-950">
+                <div id="loggedOutControls">
+                    <button onclick="showModal('loginModal'); toggleMenu();" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition text-center block shadow-lg uppercase tracking-wider text-sm">
+                        LOGIN
+                    </button>
+                </div>
+                <div id="loggedInControls" class="hidden space-y-2">
+                    <div class="text-xs text-emerald-400 font-bold uppercase mb-2 text-center">Status: Admin Active</div>
+                    <button onclick="showModal('settingsModal'); toggleMenu();" class="w-full text-xs bg-purple-600 hover:bg-purple-500 text-white py-2.5 rounded font-semibold transition">⚙️ Setting Web</button>
+                    <button onclick="openEditor(); toggleMenu();" class="w-full text-xs bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded font-semibold transition">➕ Proyek Baru</button>
+                    <button onclick="logout(); toggleMenu();" class="w-full text-xs bg-red-600 hover:bg-red-500 text-white py-2 rounded font-semibold transition">LOGOUT</button>
+                </div>
+            </div>
         </aside>
 
-        <!-- Navbar -->
+        <!-- Navbar Top Bar -->
         <nav class="glass fixed w-full z-30 top-0">
             <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <button onclick="toggleMenu()" class="p-2 text-emerald-400 hover:text-emerald-300">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <button onclick="toggleMenu()" class="p-2 text-emerald-400 hover:text-emerald-300 focus:outline-none" title="Buka Menu">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
-                    <h1 class="text-2xl font-bold text-white tracking-wider" id="navLogo">Portofolio</h1>
+                    <h1 class="text-xl md:text-2xl font-bold text-white tracking-wider cursor-pointer" onclick="switchPage('home')" id="navLogo">Portofolio</h1>
                 </div>
-                <div>
-                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-sm bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition font-semibold shadow-lg">Admin Login</button>
-                    <div id="adminControls" class="hidden flex gap-2 flex-wrap justify-end">
-                        <button onclick="showModal('settingsModal')" class="text-sm bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg">⚙️ Setting Web</button>
-                        <button onclick="openEditor()" class="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg">➕ Proyek Baru</button>
-                        <button onclick="logout()" class="text-sm bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-semibold">Logout</button>
-                    </div>
+                <div id="adminIndicator" class="hidden">
+                    <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-1 rounded-full font-semibold">Mode Admin</span>
                 </div>
             </div>
         </nav>
 
-        <!-- Header Profil -->
-        <header class="relative pt-32 pb-20 px-4 text-center min-h-[80vh] flex flex-col justify-center items-center">
-            <div class="absolute inset-0 z-[-1]">
-                <img id="bgImgDisplay" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1920&q=80" class="w-full h-full object-cover opacity-20">
-                <div class="absolute inset-0 bg-gradient-to-b from-transparent to-dark"></div>
+        <!-- HALAMAN 1: BERANDA (WELCOME PAGE) -->
+        <div id="page-home" class="page-view flex flex-col justify-center items-center min-h-[88vh] text-center px-4 pt-20">
+            <div class="card-glass p-8 md:p-14 rounded-3xl max-w-3xl border-emerald-500/30 shadow-[0_0_50px_rgba(16,185,129,0.15)] relative overflow-hidden">
+                <div class="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="inline-block bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full text-sm font-semibold mb-6 border border-emerald-500/20">
+                    ✨ Selamat Datang
+                </div>
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight tracking-tight">
+                    Selamat Datang di Web <span class="text-gradient">Portofolio</span> Ini
+                </h1>
+                <p class="text-gray-300 text-base md:text-lg mb-8 leading-relaxed max-w-2xl mx-auto">
+                    Tempat saya membagikan profil profesional, keahlian, dan berbagai karya proyek digital yang telah dikembangkan. Silakan jelajahi informasi selengkapnya melalui menu di kiri atas.
+                </p>
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <button onclick="switchPage('profile')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-7 py-3.5 rounded-xl transition shadow-lg hover:scale-105 flex items-center gap-2">
+                        <span>👤</span> Lihat Profil Diri
+                    </button>
+                    <button onclick="switchPage('projects')" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 font-bold px-7 py-3.5 rounded-xl transition hover:scale-105 flex items-center gap-2">
+                        <span>🚀</span> Jelajahi Proyek
+                    </button>
+                </div>
             </div>
-            <div class="relative inline-block mb-8">
-                <img id="profileImgDisplay" src="https://ui-avatars.com/api/?name=NA&background=10b981&color=fff&size=150" class="w-40 h-40 rounded-full border-4 border-emerald-500 object-cover shadow-[0_0_30px_rgba(16,185,129,0.5)]">
-            </div>
-            <h2 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight" id="nameDisplay">
-                <span class="text-white" id="displayNameText">Nama Saya</span> 
-                <span class="text-gradient" id="displayRoleText">Posisi</span>
-            </h2>
-            <p class="text-gray-300 max-w-2xl mx-auto text-lg md:text-xl leading-relaxed" id="bioDisplay">
-                Mengubah baris kode menjadi solusi digital yang elegan.
-            </p>
-        </header>
+        </div>
 
-        <!-- Grid Portofolio -->
-        <main class="flex-grow max-w-7xl mx-auto px-4 pb-24 w-full">
-            <div class="flex items-center gap-4 mb-12">
-                <div class="h-px bg-emerald-600 flex-grow opacity-30"></div>
-                <h3 class="text-3xl font-bold text-white uppercase tracking-widest">Koleksi <span class="text-emerald-500">Proyek</span></h3>
-                <div class="h-px bg-emerald-600 flex-grow opacity-30"></div>
+        <!-- HALAMAN 2: PROFIL DIRI -->
+        <div id="page-profile" class="page-view hidden pt-28 pb-20 px-4 max-w-4xl mx-auto w-full">
+            <div class="card-glass rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-2xl">
+                <div class="relative z-10 flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+                    <div class="relative shrink-0">
+                        <img id="profileImgDisplay" src="https://ui-avatars.com/api/?name=NA&background=10b981&color=fff&size=150" class="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-emerald-500 object-cover shadow-[0_0_30px_rgba(16,185,129,0.4)]">
+                    </div>
+                    <div class="flex-1">
+                        <span class="text-emerald-400 font-semibold text-sm uppercase tracking-widest block mb-2">Profil Profesional</span>
+                        <h2 class="text-3xl md:text-5xl font-extrabold text-white mb-2" id="displayNameText">Nama Saya</h2>
+                        <h3 class="text-xl text-emerald-400 font-medium mb-6" id="displayRoleText">Posisi / Job Title</h3>
+                        <p class="text-gray-300 text-base md:text-lg leading-relaxed" id="bioDisplay">
+                            Mengubah baris kode menjadi solusi digital yang elegan.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-12 pt-8 border-t border-gray-800 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-5 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <h4 class="text-emerald-400 font-bold text-lg mb-2">💡 Ringkasan</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">Berfokus pada pengembangan aplikasi web modern, sistem interaktif, dan pengalaman pengguna yang intuitif.</p>
+                    </div>
+                    <div class="p-5 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <h4 class="text-emerald-400 font-bold text-lg mb-2">📬 Kontak & Diskusi</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">Terbuka untuk kolaborasi proyek baru atau peluang karir profesional.</p>
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <!-- HALAMAN 3: PROYEK -->
+        <div id="page-projects" class="page-view hidden pt-28 pb-24 max-w-7xl mx-auto px-4 w-full">
+            <div class="flex flex-col items-center mb-12 text-center">
+                <span class="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-2">Portofolio Karya</span>
+                <h3 class="text-3xl md:text-5xl font-extrabold text-white">Koleksi <span class="text-emerald-500">Proyek</span></h3>
+                <div class="h-1 w-20 bg-emerald-500 mt-4 rounded-full"></div>
+            </div>
+            
             <div id="portfolioGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-        </main>
+        </div>
     </div>
 
-    <!-- PENGATURAN WEB (Global Settings) -->
+    <!-- PENGATURAN WEB (Global Settings Modal) -->
     <div id="settingsModal" class="fixed inset-0 bg-black/90 flex items-center justify-center hidden z-50 backdrop-blur-md">
         <div class="card-glass p-8 rounded-2xl w-full max-w-md relative border-purple-900 shadow-2xl h-max overflow-y-auto">
             <button onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
@@ -130,19 +196,13 @@
                     <button onclick="triggerUpload('profile')" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm w-full transition">Pilih Gambar</button>
                     <img id="preview_profile" class="h-16 mt-2 hidden rounded-full mx-auto border border-gray-500">
                 </div>
-                
-                <div class="p-3 border border-gray-700 rounded bg-dark/50">
-                    <label class="text-xs text-gray-400 block mb-2">Ganti Background Utama</label>
-                    <button onclick="triggerUpload('bg')" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm w-full transition">Pilih Gambar</button>
-                    <img id="preview_bg" class="h-16 mt-2 hidden w-full object-cover rounded border border-gray-500">
-                </div>
 
                 <button onclick="saveGlobalSettings()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition mt-4 shadow-lg">Simpan Pengaturan</button>
             </div>
         </div>
     </div>
 
-    <!-- GOOGLE SITES EDITOR LENGKAP -->
+    <!-- GOOGLE SITES EDITOR FULL -->
     <div id="siteEditor" class="fixed inset-0 bg-white z-50 hidden flex-col">
         <div class="h-14 border-b flex justify-between items-center px-4 bg-white text-black shadow-sm z-20">
             <div class="flex items-center gap-4">
@@ -156,7 +216,7 @@
             <!-- Workspace Canvas -->
             <div class="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center relative" id="workspaceContainer" onclick="handleWorkspaceClick(event)">
                 
-                <!-- TOOLBAR TEKS LENGKAP (FITUR BARU) -->
+                <!-- TOOLBAR TEKS LENGKAP -->
                 <div id="textToolbar" class="hidden bg-gray-900 text-white shadow-2xl rounded-xl p-2 fixed top-16 z-40 gap-1.5 justify-center flex flex-wrap items-center transition-opacity border border-gray-700 max-w-2xl">
                     <!-- Jenis Font -->
                     <select onchange="formatDoc('fontName', this.value)" class="bg-gray-800 text-white text-xs p-1.5 rounded border border-gray-600 outline-none cursor-pointer hover:bg-gray-700" title="Jenis Font">
@@ -166,7 +226,6 @@
                         <option value="Fira Code">Monospace</option>
                         <option value="Arial">Arial</option>
                         <option value="Georgia">Georgia</option>
-                        <option value="Impact">Impact</option>
                     </select>
 
                     <!-- Ukuran Font -->
@@ -280,8 +339,8 @@
                     </div>
 
                     <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg shadow-inner">
-                        <div class="text-xs font-bold text-slate-500 mb-2">NAVIGASI SIDEBAR</div>
-                        <input type="text" id="newMenuName" placeholder="Nama Menu (cth: GitHub)" class="w-full mt-1 p-2 border border-gray-300 rounded text-sm focus:border-blue-500 focus:outline-none">
+                        <div class="text-xs font-bold text-slate-500 mb-2">TAMBAH LINK NAVIGASI</div>
+                        <input type="text" id="newMenuName" placeholder="Nama Link (cth: GitHub)" class="w-full mt-1 p-2 border border-gray-300 rounded text-sm focus:border-blue-500 focus:outline-none">
                         <input type="text" id="newMenuUrl" placeholder="URL Target" class="w-full mt-2 p-2 border border-gray-300 rounded text-sm focus:border-blue-500 focus:outline-none">
                         <button onclick="addMenu()" class="mt-3 bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded w-full font-bold text-sm transition">Tambah Menu</button>
                     </div>
@@ -294,7 +353,7 @@
     <div id="loginModal" class="fixed inset-0 bg-black/90 flex items-center justify-center hidden z-50 backdrop-blur-md">
         <div class="card-glass p-8 rounded-2xl w-96 relative border-emerald-900 shadow-2xl">
             <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
-            <h3 class="text-2xl font-bold mb-6 text-center text-white">Admin Login</h3>
+            <h3 class="text-2xl font-bold mb-6 text-center text-white">LOGIN ADMIN</h3>
             <input type="text" id="username" placeholder="Username" class="w-full mb-4 p-3 rounded bg-dark text-white border border-gray-700 focus:border-emerald-500 outline-none">
             <input type="password" id="password" placeholder="Password" class="w-full mb-6 p-3 rounded bg-dark text-white border border-gray-700 focus:border-emerald-500 outline-none">
             <button onclick="attemptLogin()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition shadow-lg">LOGIN</button>
@@ -312,11 +371,26 @@
 
         let siteSettings = JSON.parse(localStorage.getItem('tech_settings')) || {
             name: "Portofolio", role: "Web Developer", bio: "Mengubah baris kode menjadi solusi digital yang elegan.",
-            bg: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1920&q=80",
             profile: "https://ui-avatars.com/api/?name=NA&background=10b981&color=fff&size=150"
         };
         let projects = JSON.parse(localStorage.getItem('tech_projects')) || [];
-        let menuItems = JSON.parse(localStorage.getItem('tech_menus')) || [{ id: 1, name: "Home", url: "#" }];
+        let menuItems = JSON.parse(localStorage.getItem('tech_menus')) || [];
+
+        // SYSTEM PAGE NAVIGATION (SPA)
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
+            const targetPage = document.getElementById('page-' + pageId);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+            }
+            
+            // Auto-close sidebar if open
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar.classList.contains('-translate-x-full')) {
+                toggleMenu();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         function showToast(message) {
             const toast = document.getElementById('toastNotification');
@@ -352,9 +426,6 @@
                     if (uploadTarget === 'profile') {
                         document.getElementById('preview_profile').src = base64String;
                         document.getElementById('preview_profile').classList.remove('hidden');
-                    } else if (uploadTarget === 'bg') {
-                        document.getElementById('preview_bg').src = base64String;
-                        document.getElementById('preview_bg').classList.remove('hidden');
                     } else if (uploadTarget === 'block_image') {
                         insertImageBlock(base64String);
                     }
@@ -369,7 +440,6 @@
             document.getElementById('displayNameText').innerText = siteSettings.name;
             document.getElementById('displayRoleText').innerText = siteSettings.role;
             document.getElementById('bioDisplay').innerText = siteSettings.bio;
-            document.getElementById('bgImgDisplay').src = siteSettings.bg;
             document.getElementById('profileImgDisplay').src = siteSettings.profile;
 
             document.getElementById('set_name').value = siteSettings.name;
@@ -383,9 +453,7 @@
             siteSettings.bio = document.getElementById('set_bio').value || '';
             
             const pPreview = document.getElementById('preview_profile').src;
-            const bPreview = document.getElementById('preview_bg').src;
             if(pPreview && pPreview !== window.location.href) siteSettings.profile = pPreview;
-            if(bPreview && bPreview !== window.location.href) siteSettings.bg = bPreview;
 
             localStorage.setItem('tech_settings', JSON.stringify(siteSettings));
             applyGlobalSettings();
@@ -401,17 +469,21 @@
         }
 
         function renderData() {
-            const menuList = document.getElementById('menuList');
-            menuList.innerHTML = '';
+            const customMenuList = document.getElementById('customMenuList');
+            customMenuList.innerHTML = '';
             menuItems.forEach(item => {
-                menuList.innerHTML += `<li class="flex justify-between items-center group"><a href="${item.url}" class="block w-full p-2 hover:bg-emerald-900/40 rounded transition">${item.name}</a> ${isAdmin ? `<button onclick="deleteMenu(${item.id})" class="text-red-400 text-xs hidden group-hover:block px-2 hover:text-red-300">Hapus</button>` : ''}</li>`;
+                customMenuList.innerHTML += `
+                    <div class="flex justify-between items-center px-4 py-2 hover:bg-emerald-900/40 rounded transition group">
+                        <a href="${item.url}" target="_blank" class="text-sm font-medium text-gray-300 hover:text-emerald-400 block w-full">🔗 ${item.name}</a>
+                        ${isAdmin ? `<button onclick="deleteMenu(${item.id})" class="text-red-400 text-xs hidden group-hover:block px-2 hover:text-red-300">Hapus</button>` : ''}
+                    </div>`;
             });
 
             const grid = document.getElementById('portfolioGrid');
             grid.innerHTML = '';
             projects.forEach(proj => {
                 grid.innerHTML += `
-                    <div class="card-glass rounded-xl overflow-hidden hover:-translate-y-2 transition duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex flex-col group relative">
+                    <div class="card-glass rounded-2xl overflow-hidden hover:-translate-y-2 transition duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex flex-col group relative">
                         <div class="h-56 overflow-hidden relative border-b border-gray-800">
                             <div class="absolute inset-0 bg-emerald-500/10 mix-blend-overlay group-hover:opacity-0 transition z-10"></div>
                             <img src="${proj.coverImage}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-500">
@@ -437,23 +509,29 @@
         
         function attemptLogin() {
             if (document.getElementById('username').value === ADMIN_USER && document.getElementById('password').value === ADMIN_PASS) {
-                isAdmin = true; closeModal('loginModal');
-                document.getElementById('loginBtn').classList.add('hidden');
-                document.getElementById('adminControls').classList.remove('hidden');
-                renderData(); showToast('Login Berhasil, Selamat Datang!');
+                isAdmin = true; 
+                closeModal('loginModal');
+                document.getElementById('loggedOutControls').classList.add('hidden');
+                document.getElementById('loggedInControls').classList.remove('hidden');
+                document.getElementById('adminIndicator').classList.remove('hidden');
+                renderData(); 
+                showToast('Login Berhasil!');
             } else { alert('Username / Password Salah!'); }
         }
 
         function logout() {
             isAdmin = false;
-            document.getElementById('loginBtn').classList.remove('hidden');
-            document.getElementById('adminControls').classList.add('hidden');
-            renderData(); showToast('Anda Telah Logout.');
+            document.getElementById('loggedOutControls').classList.remove('hidden');
+            document.getElementById('loggedInControls').classList.add('hidden');
+            document.getElementById('adminIndicator').classList.add('hidden');
+            renderData(); 
+            showToast('Anda Telah Logout.');
         }
 
         // --- SISTEM EDITOR GOOGLE SITES ---
         function openEditor() {
-            document.getElementById('siteEditor').classList.remove('hidden'); document.getElementById('siteEditor').classList.add('flex');
+            document.getElementById('siteEditor').classList.remove('hidden'); 
+            document.getElementById('siteEditor').classList.add('flex');
             currentEditProjectId = null;
             document.getElementById('draftTitle').value = '';
             document.getElementById('canvasArea').innerHTML = '<div class="text-center text-gray-400 mt-20 italic pointer-events-none" id="emptyState"><span class="text-4xl block mb-2">📄</span>Kanvas Kosong.<br>Gunakan menu di sebelah kanan untuk menyisipkan elemen.</div>';
@@ -637,6 +715,7 @@
                 localStorage.setItem('tech_projects', JSON.stringify(projects));
                 renderData();
                 closeEditor();
+                switchPage('projects');
                 showToast(currentEditProjectId ? "✅ Perubahan Disimpan!" : "✅ Proyek Baru Terpublikasi!");
             } catch(e) {
                 alert("Gagal menyimpan! Kapasitas Browser Penuh. Coba gunakan ukuran gambar yang lebih kecil.");
@@ -683,17 +762,18 @@
         function addMenu() {
             const name = document.getElementById('newMenuName').value;
             const url = document.getElementById('newMenuUrl').value || '#';
-            if(!name) return alert("Isi nama menu terlebih dahulu.");
+            if(!name) return alert("Isi nama link terlebih dahulu.");
             menuItems.push({ id: Date.now(), name, url });
             localStorage.setItem('tech_menus', JSON.stringify(menuItems));
             document.getElementById('newMenuName').value = ''; document.getElementById('newMenuUrl').value = '';
-            renderData(); showToast("Menu navigasi ditambahkan!");
+            renderData(); showToast("Link navigasi ditambahkan!");
         }
 
         function deleteMenu(id) {
-            if(confirm("Hapus link menu ini?")) { menuItems = menuItems.filter(m => m.id !== id); localStorage.setItem('tech_menus', JSON.stringify(menuItems)); renderData(); }
+            if(confirm("Hapus link ini?")) { menuItems = menuItems.filter(m => m.id !== id); localStorage.setItem('tech_menus', JSON.stringify(menuItems)); renderData(); }
         }
 
+        // INITIALIZE APP
         applyGlobalSettings();
         renderData();
     </script>
