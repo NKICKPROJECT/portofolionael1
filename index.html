@@ -3,28 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nathanael | Tech Portfolio</title>
-    <!-- Tailwind CSS -->
+    <title>Portofolio Tech | Dynamic</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Space Grotesk', 'sans-serif'],
-                    },
-                    colors: {
-                        emerald: {
-                            400: '#34d399',
-                            500: '#10b981',
-                            600: '#059669',
-                        },
-                        dark: '#020617', // Very dark slate
-                        darker: '#000000',
-                    }
+                    fontFamily: { sans: ['Space Grotesk', 'sans-serif'] },
+                    colors: { emerald: { 400: '#34d399', 500: '#10b981', 600: '#059669' }, dark: '#020617', darker: '#000000' }
                 }
             }
         }
@@ -33,34 +21,34 @@
         body { background-color: #020617; color: #f8fafc; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
         .glass { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(16, 185, 129, 0.2); }
         .card-glass { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(16, 185, 129, 0.1); }
-        
-        /* Gradient Text */
         .text-gradient { background: linear-gradient(to right, #34d399, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* Editor Styles (Google Sites lookalike) */
+        /* Editor Styles */
         .editable-block { border: 2px dashed transparent; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; transition: all 0.2s; position: relative; }
         .editable-block:hover { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.05); }
         .editable-block:focus-within { border-color: #10b981; background-color: white; outline: none; }
-        .delete-btn { display: none; position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; width: 24px; height: 24px; text-align: center; cursor: pointer; font-size: 14px; line-height: 24px;}
-        .editable-block:hover .delete-btn { display: block; }
+        .editor-controls { display: none; position: absolute; top: -12px; right: -10px; gap: 5px; z-index: 10; }
+        .editable-block:hover .editor-controls { display: flex; }
+        .control-btn { background: #3b82f6; color: white; border-radius: 50%; width: 26px; height: 26px; text-align: center; cursor: pointer; font-size: 14px; line-height: 26px; shadow: md; }
+        .control-btn.del { background: #ef4444; }
         
         [contenteditable]:empty:before { content: attr(placeholder); color: #9ca3af; pointer-events: none; display: block; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
 
-    <!-- PUBLIC VIEW (Website Utama) -->
+    <!-- INPUT FILE TERSEMBUNYI UNTUK UPLOAD GAMBAR -->
+    <input type="file" id="imageUploader" accept="image/*" class="hidden" onchange="processImageUpload(event)">
+
+    <!-- HALAMAN UTAMA PUBLIK -->
     <div id="publicView">
-        <!-- Sidebar Menu -->
         <div id="sidebarOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/60 z-40 hidden backdrop-blur-sm"></div>
         <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-darker border-r border-emerald-900/50 z-50 transform -translate-x-full flex flex-col transition-transform duration-300">
             <div class="p-6 border-b border-emerald-900/50 flex justify-between items-center">
                 <h2 class="text-xl font-bold text-emerald-400">Navigasi</h2>
                 <button onclick="toggleMenu()" class="text-gray-400 hover:text-white text-2xl">✕</button>
             </div>
-            <ul id="menuList" class="p-4 flex-grow space-y-2 overflow-y-auto text-gray-300">
-                <!-- Menu Dinamis -->
-            </ul>
+            <ul id="menuList" class="p-4 flex-grow space-y-2 overflow-y-auto text-gray-300"></ul>
         </aside>
 
         <!-- Navbar -->
@@ -70,32 +58,31 @@
                     <button onclick="toggleMenu()" class="p-2 text-emerald-400 hover:text-emerald-300">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
-                    <h1 class="text-2xl font-bold text-white tracking-wider">&lt;Nathanael /&gt;</h1>
+                    <h1 class="text-2xl font-bold text-white tracking-wider" id="navLogo">&lt;Nathanael /&gt;</h1>
                 </div>
                 <div>
-                    <button id="loginBtn" onclick="showLogin()" class="text-sm bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition font-semibold shadow-[0_0_15px_rgba(16,185,129,0.4)]">Admin Login</button>
-                    <div id="adminControls" class="hidden flex gap-3">
-                        <button onclick="openEditor()" class="text-sm bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg transition font-semibold shadow-lg">🛠 Buka Editor Web</button>
-                        <button onclick="logout()" class="text-sm bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-lg transition font-semibold">Logout</button>
+                    <button id="loginBtn" onclick="showModal('loginModal')" class="text-sm bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition font-semibold">Admin Login</button>
+                    <div id="adminControls" class="hidden flex gap-2 flex-wrap justify-end">
+                        <button onclick="showModal('settingsModal')" class="text-sm bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg">⚙️ Setting Web</button>
+                        <button onclick="openEditor()" class="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg">➕ Proyek Baru</button>
+                        <button onclick="logout()" class="text-sm bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-semibold">Logout</button>
                     </div>
                 </div>
             </div>
         </nav>
 
-        <!-- Hero Section (Tech Background) -->
+        <!-- Header / Profil -->
         <header class="relative pt-32 pb-20 px-4 text-center min-h-[80vh] flex flex-col justify-center items-center">
-            <!-- Background Image with Overlay -->
             <div class="absolute inset-0 z-[-1]">
-                <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1920&q=80" alt="Coding Background" class="w-full h-full object-cover opacity-20">
+                <img id="bgImgDisplay" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1920&q=80" class="w-full h-full object-cover opacity-20">
                 <div class="absolute inset-0 bg-gradient-to-b from-transparent to-dark"></div>
             </div>
-
             <div class="relative inline-block mb-8">
-                <img src="https://ui-avatars.com/api/?name=Nathanael&background=10b981&color=fff&size=150" alt="Profile" class="w-40 h-40 rounded-full border-4 border-emerald-500 object-cover shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+                <img id="profileImgDisplay" src="https://ui-avatars.com/api/?name=Nathanael&background=10b981&color=fff&size=150" class="w-40 h-40 rounded-full border-4 border-emerald-500 object-cover shadow-[0_0_30px_rgba(16,185,129,0.5)]">
             </div>
-            <h2 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">System.<span class="text-gradient">Architect</span></h2>
-            <p class="text-gray-300 max-w-2xl mx-auto text-lg md:text-xl leading-relaxed">
-                Mengubah baris kode menjadi solusi digital yang elegan. Selamat datang di ruang karya saya, tempat teknologi dan desain menyatu.
+            <h2 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight" id="nameDisplay">System.<span class="text-gradient" id="roleDisplay">Architect</span></h2>
+            <p class="text-gray-300 max-w-2xl mx-auto text-lg md:text-xl leading-relaxed" id="bioDisplay">
+                Mengubah baris kode menjadi solusi digital yang elegan.
             </p>
         </header>
 
@@ -106,101 +93,114 @@
                 <h3 class="text-3xl font-bold text-white uppercase tracking-widest">Inisialisasi <span class="text-emerald-500">Proyek</span></h3>
                 <div class="h-px bg-emerald-600 flex-grow opacity-30"></div>
             </div>
-            
-            <div id="portfolioGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Data portofolio akan di-render di sini -->
-            </div>
+            <div id="portfolioGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
         </main>
     </div>
 
-    <!-- GOOGLE SITES-LIKE EDITOR (Admin View) -->
-    <!-- Tampilan ini dirancang semirip mungkin dengan Google Sites sesuai gambar referensi -->
-    <div id="siteEditor" class="fixed inset-0 bg-white z-50 hidden flex-col">
-        <!-- Editor Navbar -->
-        <div class="h-14 border-b flex justify-between items-center px-4 bg-white text-black">
-            <div class="flex items-center gap-4">
-                <button onclick="closeEditor()" class="text-gray-500 hover:text-black">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                </button>
-                <span class="font-semibold text-lg text-gray-700">Editor Proyek Portofolio</span>
-            </div>
-            <div class="flex items-center gap-4">
-                <span class="text-sm text-gray-400">All changes saved locally</span>
-                <!-- Tombol Publish Biru khas Google Sites -->
-                <button onclick="publishProject()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium text-sm transition">Publish</button>
+    <!-- PENGATURAN WEB (Global Settings Modal) -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/90 flex items-center justify-center hidden z-50 backdrop-blur-md">
+        <div class="card-glass p-8 rounded-2xl w-full max-w-md relative border-purple-900 shadow-2xl h-max overflow-y-auto">
+            <button onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
+            <h3 class="text-2xl font-bold mb-6 text-white">⚙️ Pengaturan Website</h3>
+            <div class="space-y-4">
+                <div><label class="text-xs text-gray-400">Nama Lengkap / Brand</label><input type="text" id="set_name" class="w-full p-2 mt-1 rounded bg-dark border border-gray-700 text-white"></div>
+                <div><label class="text-xs text-gray-400">Peran / Posisi (cth: Architect)</label><input type="text" id="set_role" class="w-full p-2 mt-1 rounded bg-dark border border-gray-700 text-white"></div>
+                <div><label class="text-xs text-gray-400">Deskripsi Bio Singkat</label><textarea id="set_bio" class="w-full p-2 mt-1 rounded bg-dark border border-gray-700 text-white h-20"></textarea></div>
+                
+                <div class="p-3 border border-gray-700 rounded bg-dark/50">
+                    <label class="text-xs text-gray-400 block mb-2">Ganti Foto Profil (Upload)</label>
+                    <button onclick="triggerUpload('profile')" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm w-full">Pilih Gambar dari Perangkat</button>
+                    <img id="preview_profile" class="h-16 mt-2 hidden rounded-full mx-auto">
+                </div>
+                
+                <div class="p-3 border border-gray-700 rounded bg-dark/50">
+                    <label class="text-xs text-gray-400 block mb-2">Ganti Background Utama (Upload)</label>
+                    <button onclick="triggerUpload('bg')" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm w-full">Pilih Gambar dari Perangkat</button>
+                    <img id="preview_bg" class="h-16 mt-2 hidden w-full object-cover rounded">
+                </div>
+
+                <button onclick="saveGlobalSettings()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition mt-4">Simpan Pengaturan</button>
             </div>
         </div>
+    </div>
 
-        <!-- Editor Body -->
-        <div class="flex flex-1 overflow-hidden bg-gray-50 text-black">
-            
-            <!-- Left Canvas (Workspace) -->
-            <div class="flex-1 overflow-y-auto p-10 flex flex-col items-center">
-                <div class="w-full max-w-4xl bg-white shadow-sm min-h-screen border rounded">
-                    
-                    <!-- Title Header Proyek -->
-                    <div class="w-full bg-slate-800 h-48 relative flex items-center justify-center text-white text-center rounded-t">
-                        <input type="text" id="draftTitle" placeholder="MASUKKAN JUDUL PROYEK" class="bg-transparent text-4xl font-bold text-center border-none focus:outline-none w-full placeholder-gray-400 uppercase">
+    <!-- GOOGLE SITES EDITOR LENGKAP -->
+    <div id="siteEditor" class="fixed inset-0 bg-white z-50 hidden flex-col">
+        <div class="h-14 border-b flex justify-between items-center px-4 bg-white text-black shadow-sm">
+            <div class="flex items-center gap-4">
+                <button onclick="closeEditor()" class="text-gray-500 hover:text-black font-bold">← Batal</button>
+                <span class="font-semibold text-lg text-gray-700">Google Sites Style Editor</span>
+            </div>
+            <button onclick="publishProject()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium text-sm transition">Publikasikan</button>
+        </div>
+
+        <div class="flex flex-1 overflow-hidden bg-gray-100 text-black">
+            <!-- Workspace / Canvas -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-10 flex flex-col items-center">
+                <div class="w-full max-w-4xl bg-white shadow-md min-h-screen border rounded">
+                    <!-- Judul Proyek -->
+                    <div class="w-full bg-slate-800 h-40 relative flex items-center justify-center text-white text-center rounded-t">
+                        <input type="text" id="draftTitle" placeholder="JUDUL PROYEK" class="bg-transparent text-4xl font-bold text-center border-none focus:outline-none w-full placeholder-gray-400 uppercase px-4">
+                    </div>
+                    <!-- Toolbar Teks Sederhana (Hanya muncul saat klik teks) -->
+                    <div id="textToolbar" class="hidden bg-white border border-gray-300 shadow-lg rounded p-1 sticky top-0 z-20 flex gap-1 justify-center m-2">
+                        <button onclick="document.execCommand('bold',false,null)" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">B</button>
+                        <button onclick="document.execCommand('italic',false,null)" class="px-2 py-1 hover:bg-gray-200 italic rounded">I</button>
+                        <button onclick="document.execCommand('underline',false,null)" class="px-2 py-1 hover:bg-gray-200 underline rounded">U</button>
+                        <div class="w-px bg-gray-300 mx-1"></div>
+                        <button onclick="document.execCommand('formatBlock', false, 'H2')" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">H2</button>
+                        <button onclick="document.execCommand('formatBlock', false, 'H3')" class="px-2 py-1 hover:bg-gray-200 font-bold rounded">H3</button>
+                        <button onclick="document.execCommand('formatBlock', false, 'P')" class="px-2 py-1 hover:bg-gray-200 rounded">P</button>
+                        <div class="w-px bg-gray-300 mx-1"></div>
+                        <button onclick="document.execCommand('insertUnorderedList',false,null)" class="px-2 py-1 hover:bg-gray-200 rounded">• List</button>
                     </div>
 
-                    <!-- Area Blok Konten -->
-                    <div id="canvasArea" class="p-8 min-h-[400px]">
-                        <!-- Elemen yang di-insert admin akan muncul di sini -->
-                        <div class="text-center text-gray-400 mt-10 italic pointer-events-none" id="emptyState">
-                            Gunakan menu di kanan untuk menambahkan gambar, teks, atau layout blok.
-                        </div>
+                    <!-- Area Konten -->
+                    <div id="canvasArea" class="p-6 md:p-10 min-h-[400px]" onclick="checkTextFocus(event)">
+                        <div class="text-center text-gray-400 mt-10 italic pointer-events-none" id="emptyState">Gunakan menu di kanan untuk menyisipkan elemen.</div>
                     </div>
-
                 </div>
             </div>
 
-            <!-- Right Sidebar (Insert Menu Google Sites Style) -->
-            <div class="w-80 bg-white border-l border-gray-200 overflow-y-auto shadow-xl z-10 flex flex-col">
-                <!-- Tabs: Insert, Pages, Themes -->
+            <!-- Panel Kanan (Insert Menu) -->
+            <div class="w-72 bg-white border-l border-gray-200 overflow-y-auto shadow-xl z-10 flex flex-col shrink-0">
                 <div class="flex border-b text-sm font-medium text-gray-600">
-                    <div class="flex-1 text-center py-3 border-b-2 border-blue-600 text-blue-600 cursor-pointer">Insert</div>
-                    <div class="flex-1 text-center py-3 hover:bg-gray-50 cursor-pointer">Pages</div>
-                    <div class="flex-1 text-center py-3 hover:bg-gray-50 cursor-pointer">Themes</div>
+                    <div class="flex-1 text-center py-3 border-b-2 border-blue-600 text-blue-600">Sisipkan</div>
+                    <div class="flex-1 text-center py-3 hover:bg-gray-50 cursor-pointer">Halaman</div>
                 </div>
 
                 <div class="p-4">
-                    <!-- Insert Buttons (Text & Image) -->
-                    <div class="grid grid-cols-2 gap-3 mb-8">
-                        <button onclick="addTextBlock()" class="flex flex-col items-center justify-center p-4 border rounded hover:bg-gray-50 hover:shadow-sm transition">
-                            <span class="text-blue-600 font-serif text-2xl font-bold mb-1">Tt</span>
-                            <span class="text-xs text-gray-700">Text box</span>
+                    <div class="grid grid-cols-2 gap-2 mb-6">
+                        <button onclick="addBlock('text')" class="flex flex-col items-center justify-center p-3 border rounded hover:bg-gray-50 hover:shadow-sm">
+                            <span class="text-blue-600 font-serif text-xl font-bold mb-1">Tt</span><span class="text-xs">Kotak Teks</span>
                         </button>
-                        <button onclick="addImageBlock()" class="flex flex-col items-center justify-center p-4 border rounded hover:bg-gray-50 hover:shadow-sm transition">
-                            <svg class="w-7 h-7 text-red-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <span class="text-xs text-gray-700">Images</span>
+                        <button onclick="triggerUpload('block_image')" class="flex flex-col items-center justify-center p-3 border rounded hover:bg-gray-50 hover:shadow-sm">
+                            <span class="text-green-500 text-xl mb-1">🖼️</span><span class="text-xs">Gambar (Upload)</span>
                         </button>
                     </div>
 
-                    <!-- Content Blocks Section -->
-                    <div class="flex justify-between items-center mb-4 text-xs font-bold text-gray-500">
-                        <span>CONTENT BLOCKS</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-2">
-                        <!-- Layout 1: Image Left, Text Right -->
-                        <button onclick="addLayoutBlock()" class="p-2 border rounded hover:bg-gray-100 flex items-center justify-center h-16">
-                            <div class="flex w-full gap-2 opacity-60">
-                                <div class="w-1/2 h-10 bg-gray-400 rounded-sm"></div>
-                                <div class="w-1/2 flex flex-col gap-1">
-                                    <div class="w-full h-2 bg-gray-400"></div>
-                                    <div class="w-3/4 h-2 bg-gray-400"></div>
-                                </div>
-                            </div>
+                    <div class="text-xs font-bold text-gray-500 mb-2">BLOK KONTEN</div>
+                    <div class="grid grid-cols-2 gap-2 mb-6">
+                        <button onclick="addBlock('layout_left')" class="p-2 border rounded hover:bg-gray-100 flex items-center justify-center h-14 bg-gray-50">
+                            <div class="flex w-full gap-1"><div class="w-1/2 h-8 bg-gray-300"></div><div class="w-1/2 flex flex-col gap-1"><div class="w-full h-1 bg-gray-300"></div><div class="w-3/4 h-1 bg-gray-300"></div></div></div>
                         </button>
-                        
-                        <!-- Extra Setting Menu -->
-                        <div class="p-3 bg-gray-50 border rounded text-xs text-gray-600 mt-4 col-span-2">
-                            <b>Setting Navigasi (Garis 3):</b><br>
-                            <input type="text" id="newMenuName" placeholder="Nama Menu (cth: GitHub)" class="w-full mt-2 p-1 border rounded"><br>
-                            <input type="text" id="newMenuUrl" placeholder="URL (cth: https://github.com/)" class="w-full mt-2 p-1 border rounded"><br>
-                            <button onclick="addMenu()" class="mt-2 bg-slate-800 text-white px-3 py-1 rounded w-full">Tambah Menu</button>
-                        </div>
+                        <button onclick="addBlock('layout_right')" class="p-2 border rounded hover:bg-gray-100 flex items-center justify-center h-14 bg-gray-50">
+                            <div class="flex w-full gap-1"><div class="w-1/2 flex flex-col gap-1"><div class="w-full h-1 bg-gray-300"></div><div class="w-3/4 h-1 bg-gray-300"></div></div><div class="w-1/2 h-8 bg-gray-300"></div></div>
+                        </button>
+                    </div>
+
+                    <div class="text-xs font-bold text-gray-500 mb-2">ELEMEN LAIN</div>
+                    <div class="space-y-2 mb-6">
+                        <button onclick="addBlock('divider')" class="w-full p-2 border rounded hover:bg-gray-50 text-left text-sm flex items-center gap-2">➖ Pembatas (Divider)</button>
+                        <button onclick="addBlock('button')" class="w-full p-2 border rounded hover:bg-gray-50 text-left text-sm flex items-center gap-2">🔗 Tombol Link</button>
+                        <button onclick="addBlock('youtube')" class="w-full p-2 border rounded hover:bg-gray-50 text-left text-sm flex items-center gap-2">▶️ Video YouTube</button>
+                    </div>
+
+                    <div class="p-3 bg-blue-50 border border-blue-100 rounded text-xs text-gray-700">
+                        <b>Menu Navigasi Sidebar:</b><br>
+                        <input type="text" id="newMenuName" placeholder="Nama Menu (cth: GitHub)" class="w-full mt-2 p-1.5 border rounded bg-white">
+                        <input type="text" id="newMenuUrl" placeholder="URL (cth: https://github.com/)" class="w-full mt-2 p-1.5 border rounded bg-white">
+                        <button onclick="addMenu()" class="mt-2 bg-blue-600 text-white px-3 py-1.5 rounded w-full font-bold">Tambah Menu</button>
                     </div>
                 </div>
             </div>
@@ -210,46 +210,113 @@
     <!-- Login Modal -->
     <div id="loginModal" class="fixed inset-0 bg-black/90 flex items-center justify-center hidden z-50 backdrop-blur-md">
         <div class="card-glass p-8 rounded-2xl w-96 relative border-emerald-900 shadow-2xl">
-            <button onclick="closeLogin()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
-            <h3 class="text-2xl font-bold mb-6 text-center text-white">System <span class="text-emerald-500">Access</span></h3>
-            <input type="text" id="username" placeholder="Username" class="w-full mb-4 p-3 rounded-lg bg-dark text-white border border-gray-700 focus:outline-none focus:border-emerald-500">
-            <input type="password" id="password" placeholder="Password" class="w-full mb-6 p-3 rounded-lg bg-dark text-white border border-gray-700 focus:outline-none focus:border-emerald-500">
-            <button onclick="attemptLogin()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition">AUTHENTICATE</button>
+            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
+            <h3 class="text-2xl font-bold mb-6 text-center text-white">System Access</h3>
+            <input type="text" id="username" placeholder="Username" class="w-full mb-4 p-3 rounded bg-dark text-white border border-gray-700">
+            <input type="password" id="password" placeholder="Password" class="w-full mb-6 p-3 rounded bg-dark text-white border border-gray-700">
+            <button onclick="attemptLogin()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition">LOGIN</button>
         </div>
     </div>
 
     <script>
-        // Kredensial Admin
         const ADMIN_USER = "nathanael25";
         const ADMIN_PASS = "Nathanael123@";
         let isAdmin = false;
+        
+        let currentEditProjectId = null; // Menyimpan ID proyek yang sedang diedit
+        let uploadTarget = null; // Menyimpan tujuan upload ('profile', 'bg', atau 'block_image')
+        let tempBlockUploadId = null;
 
-        // Inisialisasi Data Storage (Menggunakan gambar komputer/web dev default)
-        let projects = JSON.parse(localStorage.getItem('tech_portofolio')) || [
-            {
-                id: 1,
-                title: "WEB APP DEVELOPMENT",
-                coverImage: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=600&q=80",
-                contentHTML: "<p class='text-gray-300'>Sistem manajemen database berbasis cloud dengan UI modern.</p>"
+        // Data Storage
+        let siteSettings = JSON.parse(localStorage.getItem('tech_settings')) || {
+            name: "Nathanael", role: "Architect", bio: "Mengubah baris kode menjadi solusi digital yang elegan.",
+            bg: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1920&q=80",
+            profile: "https://ui-avatars.com/api/?name=Nathanael&background=10b981&color=fff&size=150"
+        };
+        let projects = JSON.parse(localStorage.getItem('tech_projects')) || [];
+        let menuItems = JSON.parse(localStorage.getItem('tech_menus')) || [{ id: 1, name: "Home", url: "#" }];
+
+        // --- SISTEM UPLOAD GAMBAR DARI PERANGKAT (Resize to Base64) ---
+        function triggerUpload(target) {
+            uploadTarget = target;
+            document.getElementById('imageUploader').click();
+        }
+
+        function processImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Kompresi otomatis menggunakan Canvas agar localStorage tidak jebol
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; // Resize agar ringan
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const base64String = canvas.toDataURL('image/jpeg', 0.7); // 70% Quality
+
+                    if (uploadTarget === 'profile') {
+                        document.getElementById('preview_profile').src = base64String;
+                        document.getElementById('preview_profile').classList.remove('hidden');
+                    } else if (uploadTarget === 'bg') {
+                        document.getElementById('preview_bg').src = base64String;
+                        document.getElementById('preview_bg').classList.remove('hidden');
+                    } else if (uploadTarget === 'block_image') {
+                        insertImageBlock(base64String);
+                    }
+                }
+                img.src = e.target.result;
             }
-        ];
+            reader.readAsDataURL(file);
+        }
 
-        let menuItems = JSON.parse(localStorage.getItem('tech_menu')) || [
-            { id: 1, name: "Home", url: "#" },
-            { id: 2, name: "GitHub Repository", url: "https://github.com/" }
-        ];
+        // --- MANAJEMEN TAMPILAN UTAMA & PENGATURAN GLOBAL ---
+        function applyGlobalSettings() {
+            document.getElementById('nameDisplay').innerHTML = `System.<span class="text-gradient">${siteSettings.name}</span>`;
+            document.getElementById('roleDisplay').innerText = siteSettings.role;
+            document.getElementById('bioDisplay').innerText = siteSettings.bio;
+            document.getElementById('bgImgDisplay').src = siteSettings.bg;
+            document.getElementById('profileImgDisplay').src = siteSettings.profile;
+            document.getElementById('navLogo').innerText = `<${siteSettings.name} />`;
 
-        // FUNGSI UTAMA HALAMAN PUBLIK
+            // Form Pengaturan
+            document.getElementById('set_name').value = siteSettings.name;
+            document.getElementById('set_role').value = siteSettings.role;
+            document.getElementById('set_bio').value = siteSettings.bio;
+        }
+
+        function saveGlobalSettings() {
+            siteSettings.name = document.getElementById('set_name').value || 'Nama';
+            siteSettings.role = document.getElementById('set_role').value || 'Role';
+            siteSettings.bio = document.getElementById('set_bio').value || '';
+            
+            const pPreview = document.getElementById('preview_profile').src;
+            const bPreview = document.getElementById('preview_bg').src;
+            if(pPreview && pPreview !== window.location.href) siteSettings.profile = pPreview;
+            if(bPreview && bPreview !== window.location.href) siteSettings.bg = bPreview;
+
+            localStorage.setItem('tech_settings', JSON.stringify(siteSettings));
+            applyGlobalSettings();
+            closeModal('settingsModal');
+            alert('Pengaturan Global Berhasil Disimpan!');
+        }
+
         function toggleMenu() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            if (sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-            }
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
         }
 
         function renderData() {
@@ -257,12 +324,7 @@
             const menuList = document.getElementById('menuList');
             menuList.innerHTML = '';
             menuItems.forEach(item => {
-                menuList.innerHTML += `
-                    <li class="flex justify-between items-center group">
-                        <a href="${item.url}" class="block w-full p-3 rounded-lg hover:bg-emerald-900/40 transition hover:text-emerald-400" target="_blank">${item.name}</a>
-                        ${isAdmin ? `<button onclick="deleteMenu(${item.id})" class="text-red-500 bg-red-900/20 px-2 py-1 rounded hidden group-hover:block">Del</button>` : ''}
-                    </li>
-                `;
+                menuList.innerHTML += `<li class="flex justify-between items-center group"><a href="${item.url}" class="block w-full p-2 hover:bg-emerald-900/40 rounded">${item.name}</a> ${isAdmin ? `<button onclick="deleteMenu(${item.id})" class="text-red-500 text-xs hidden group-hover:block px-2">Del</button>` : ''}</li>`;
             });
 
             // Render Portofolio
@@ -270,37 +332,41 @@
             grid.innerHTML = '';
             projects.forEach(proj => {
                 grid.innerHTML += `
-                    <div class="card-glass rounded-xl overflow-hidden hover:-translate-y-2 transition duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)] group relative flex flex-col">
+                    <div class="card-glass rounded-xl overflow-hidden hover:-translate-y-2 transition duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex flex-col group relative">
                         <div class="h-48 overflow-hidden relative">
                             <div class="absolute inset-0 bg-emerald-500/20 mix-blend-overlay group-hover:opacity-0 transition z-10"></div>
-                            <img src="${proj.coverImage}" alt="Cover" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-500">
+                            <img src="${proj.coverImage}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-500">
                         </div>
-                        <div class="p-6 flex-grow">
+                        <div class="p-6 flex-grow bg-white/5 group-hover:bg-white/10 transition">
                             <h3 class="text-xl font-bold mb-3 text-emerald-400 uppercase tracking-wide">${proj.title}</h3>
-                            <div class="text-gray-400 text-sm mb-4 prose prose-invert">${proj.contentHTML}</div>
+                            <div class="text-gray-300 text-sm line-clamp-3 prose prose-invert w-full truncate-html">${proj.cleanHTML.substring(0, 150)}...</div>
                         </div>
-                        ${isAdmin ? `<button onclick="deleteProject(${proj.id})" class="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded text-xs z-20 shadow-lg">Hapus Proyek</button>` : ''}
+                        
+                        <!-- VIEW PROJECT OVERLAY (Untuk lihat isi lengkap) -->
+                        <div class="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition z-20 gap-2 backdrop-blur-sm">
+                            <button onclick="viewProject(${proj.id})" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold">Lihat Detail</button>
+                            ${isAdmin ? `
+                                <button onclick="editProject(${proj.id})" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">Edit</button>
+                                <button onclick="deleteProject(${proj.id})" class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold">Hapus</button>
+                            ` : ''}
+                        </div>
                     </div>
                 `;
             });
         }
 
-        // FUNGSI AUTHENTIKASI
-        function showLogin() { document.getElementById('loginModal').classList.remove('hidden'); }
-        function closeLogin() { document.getElementById('loginModal').classList.add('hidden'); }
+        // --- SISTEM LOGIN & MODAL ---
+        function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         
         function attemptLogin() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            if (u === ADMIN_USER && p === ADMIN_PASS) {
+            if (document.getElementById('username').value === ADMIN_USER && document.getElementById('password').value === ADMIN_PASS) {
                 isAdmin = true;
-                closeLogin();
+                closeModal('loginModal');
                 document.getElementById('loginBtn').classList.add('hidden');
                 document.getElementById('adminControls').classList.remove('hidden');
                 renderData();
-            } else {
-                alert('Akses Ditolak!');
-            }
+            } else { alert('Akses Ditolak!'); }
         }
 
         function logout() {
@@ -310,146 +376,194 @@
             renderData();
         }
 
-        // FUNGSI EDITOR GOOGLE SITES-STYLE
+        // --- SISTEM EDITOR GOOGLE SITES (Block Builder) ---
         function openEditor() {
             document.getElementById('siteEditor').classList.remove('hidden');
             document.getElementById('siteEditor').classList.add('flex');
-            document.getElementById('emptyState').style.display = 'block';
-            document.getElementById('canvasArea').innerHTML = '<div class="text-center text-gray-400 mt-10 italic pointer-events-none" id="emptyState">Gunakan menu di kanan untuk menambahkan gambar, teks, atau layout blok.</div>';
+            currentEditProjectId = null;
             document.getElementById('draftTitle').value = '';
-        }
-        
-        function closeEditor() {
-            document.getElementById('siteEditor').classList.add('hidden');
-            document.getElementById('siteEditor').classList.remove('flex');
+            document.getElementById('canvasArea').innerHTML = '<div class="text-center text-gray-400 mt-10 italic pointer-events-none" id="emptyState">Gunakan menu di kanan untuk menyisipkan elemen.</div>';
         }
 
-        function hideEmptyState() {
-            const es = document.getElementById('emptyState');
-            if(es) es.remove();
+        function closeEditor() { document.getElementById('siteEditor').classList.add('hidden'); document.getElementById('siteEditor').classList.remove('flex'); }
+
+        function checkTextFocus(e) {
+            const tb = document.getElementById('textToolbar');
+            if(e.target.hasAttribute('contenteditable')) {
+                tb.classList.remove('hidden');
+            } else {
+                tb.classList.add('hidden');
+            }
         }
 
-        function addTextBlock() {
+        function hideEmptyState() { const es = document.getElementById('emptyState'); if(es) es.remove(); }
+
+        function getControlsHTML() {
+            return `<div class="editor-controls">
+                        <div onclick="moveUp(this)" class="control-btn" title="Pindah Atas">↑</div>
+                        <div onclick="moveDown(this)" class="control-btn" title="Pindah Bawah">↓</div>
+                        <div onclick="this.parentElement.parentElement.remove()" class="control-btn del" title="Hapus Blok">✕</div>
+                    </div>`;
+        }
+
+        function moveUp(el) { const block = el.closest('.editable-block'); if(block.previousElementSibling) block.parentNode.insertBefore(block, block.previousElementSibling); }
+        function moveDown(el) { const block = el.closest('.editable-block'); if(block.nextElementSibling) block.parentNode.insertBefore(block.nextElementSibling, block); }
+
+        function addBlock(type) {
             hideEmptyState();
             const id = Date.now();
-            const html = `
-                <div id="block-${id}" class="editable-block group">
-                    <div onclick="this.parentElement.remove()" class="delete-btn" title="Hapus Blok">✕</div>
-                    <div contenteditable="true" placeholder="Ketik teks deskripsi di sini..." class="w-full text-lg outline-none min-h-[50px] p-2"></div>
-                </div>
-            `;
+            let content = '';
+            let html = `<div id="block-${id}" class="editable-block group w-full">${getControlsHTML()}`;
+
+            if(type === 'text') {
+                html += `<div contenteditable="true" placeholder="Ketik teks, gunakan toolbar di atas untuk format (B, I, U, Header)..." class="w-full text-lg outline-none min-h-[60px] p-2 break-words"></div>`;
+            } else if (type === 'divider') {
+                html += `<hr class="border-t-2 border-gray-300 my-4 w-full">`;
+            } else if (type === 'button') {
+                const btnText = prompt("Teks Tombol:") || "Klik Disini";
+                const btnUrl = prompt("URL Tujuan (cth: https://google.com):") || "#";
+                html += `<div class="text-center w-full"><a href="${btnUrl}" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-full font-bold uppercase cursor-pointer" contenteditable="false">${btnText}</a></div>`;
+            } else if (type === 'youtube') {
+                const ytUrl = prompt("Masukkan URL YouTube (cth: https://www.youtube.com/watch?v=XXXX):");
+                if(!ytUrl) return;
+                const videoId = ytUrl.split('v=')[1]?.substring(0, 11) || ytUrl.split('youtu.be/')[1]?.substring(0, 11);
+                html += `<div class="w-full flex justify-center"><iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen class="rounded shadow-lg"></iframe></div>`;
+            } else if (type === 'layout_left') {
+                html += `<div class="flex flex-col md:flex-row gap-6 w-full"><div class="w-full md:w-1/2 min-h-[150px] bg-gray-200 rounded flex items-center justify-center text-gray-400 border cursor-pointer" onclick="replacePlaceholderImage(this)">Klik Untuk Ganti Gambar</div><div contenteditable="true" placeholder="Ketik penjelasan di samping gambar..." class="w-full md:w-1/2 outline-none p-2 min-h-[100px]"></div></div>`;
+            } else if (type === 'layout_right') {
+                html += `<div class="flex flex-col md:flex-row gap-6 w-full"><div contenteditable="true" placeholder="Ketik penjelasan di samping gambar..." class="w-full md:w-1/2 outline-none p-2 min-h-[100px]"></div><div class="w-full md:w-1/2 min-h-[150px] bg-gray-200 rounded flex items-center justify-center text-gray-400 border cursor-pointer" onclick="replacePlaceholderImage(this)">Klik Untuk Ganti Gambar</div></div>`;
+            }
+            
+            html += `</div>`;
             document.getElementById('canvasArea').insertAdjacentHTML('beforeend', html);
         }
 
-        function addImageBlock() {
-            const url = prompt("Masukkan URL Gambar (Kosongkan untuk gambar default tech):") || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80";
+        function insertImageBlock(base64Src) {
             hideEmptyState();
             const id = Date.now();
-            const html = `
-                <div id="block-${id}" class="editable-block group">
-                    <div onclick="this.parentElement.remove()" class="delete-btn">✕</div>
-                    <img src="${url}" class="w-full h-auto rounded shadow-sm" alt="Inserted Image">
-                </div>
-            `;
+            const html = `<div id="block-${id}" class="editable-block group w-full">${getControlsHTML()}<img src="${base64Src}" class="w-full max-w-2xl mx-auto h-auto rounded shadow-sm" alt="Inserted Image"></div>`;
             document.getElementById('canvasArea').insertAdjacentHTML('beforeend', html);
         }
 
-        function addLayoutBlock() {
-            const url = prompt("Masukkan URL Gambar untuk layout:") || "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=500&q=80";
-            hideEmptyState();
-            const id = Date.now();
-            const html = `
-                <div id="block-${id}" class="editable-block group flex flex-col md:flex-row gap-6 items-start">
-                    <div onclick="this.parentElement.remove()" class="delete-btn">✕</div>
-                    <img src="${url}" class="w-full md:w-1/2 rounded shadow-sm" alt="Layout Image">
-                    <div contenteditable="true" placeholder="Ketik penjelasan untuk gambar di samping..." class="w-full md:w-1/2 outline-none text-gray-700 min-h-[100px] p-2"></div>
-                </div>
-            `;
-            document.getElementById('canvasArea').insertAdjacentHTML('beforeend', html);
+        function replacePlaceholderImage(el) {
+            // Fitur sederhana untuk mengganti placeholder layout
+            const url = prompt("Masukkan URL Gambar atau biarkan kosong untuk default:");
+            if(url) { el.outerHTML = `<img src="${url}" class="w-full md:w-1/2 object-cover rounded shadow">`; }
         }
 
+        // --- SISTEM SIMPAN DAN EDIT PROYEK (CRUD) ---
         function publishProject() {
             const title = document.getElementById('draftTitle').value;
-            if(!title) return alert("Judul Proyek wajib diisi di bagian atas kanvas!");
+            if(!title) return alert("Judul Proyek di bagian atas hitam wajib diisi!");
 
-            // Ambil semua isi canvas
             const canvasArea = document.getElementById('canvasArea');
-            
-            // Bersihkan elemen UI editor (tombol delete & border dashed) sebelum disimpan ke public
-            let cleanHTML = "";
             const blocks = canvasArea.querySelectorAll('.editable-block');
-            
-            if(blocks.length === 0) return alert("Tambahkan minimal 1 konten blok terlebih dahulu!");
+            if(blocks.length === 0) return alert("Kanvas kosong! Tambahkan elemen dari kanan.");
 
-            // Ekstrak gambar pertama untuk dijadikan cover
+            // Ekstrak Cover Gambar
             let firstImage = "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=600&q=80";
             const imgTag = canvasArea.querySelector('img');
             if(imgTag) firstImage = imgTag.src;
 
-            blocks.forEach(block => {
-                // Clone block untuk dimanipulasi tanpa merusak tampilan editor
-                let clone = block.cloneNode(true);
-                // Hapus class editor
-                clone.className = "mb-4"; 
-                // Hapus tombol delete
-                const delBtn = clone.querySelector('.delete-btn');
-                if(delBtn) delBtn.remove();
-                
-                // Ambil div yang contenteditable dan hapus attributenya
-                const editables = clone.querySelectorAll('[contenteditable]');
-                editables.forEach(e => {
-                    e.removeAttribute('contenteditable');
-                    e.removeAttribute('placeholder');
-                });
-
-                cleanHTML += clone.outerHTML;
+            // Simpan Data Editor (HTML mentah) dan Data Bersih (Untuk Render Publik)
+            let editorHTML = canvasArea.innerHTML;
+            
+            // Proses Clean HTML
+            let cleanWrapper = document.createElement('div');
+            cleanWrapper.innerHTML = editorHTML;
+            cleanWrapper.querySelectorAll('.editor-controls').forEach(e => e.remove());
+            cleanWrapper.querySelectorAll('.editable-block').forEach(e => {
+                e.className = "mb-6 w-full"; // Ganti class untuk publik
             });
+            cleanWrapper.querySelectorAll('[contenteditable]').forEach(e => {
+                e.removeAttribute('contenteditable'); e.removeAttribute('placeholder'); e.classList.remove('outline-none');
+            });
+            let cleanHTML = cleanWrapper.innerHTML;
 
-            // Simpan Data
-            projects.unshift({
-                id: Date.now(),
+            const projectData = {
+                id: currentEditProjectId || Date.now(), // Update jika ada ID, Buat baru jika tidak ada
                 title: title,
                 coverImage: firstImage,
-                contentHTML: cleanHTML
-            });
+                editorHTML: editorHTML,
+                cleanHTML: cleanHTML
+            };
+
+            if (currentEditProjectId) {
+                // Update existing
+                const index = projects.findIndex(p => p.id === currentEditProjectId);
+                if (index !== -1) projects[index] = projectData;
+            } else {
+                // Insert new
+                projects.unshift(projectData);
+            }
             
-            localStorage.setItem('tech_portofolio', JSON.stringify(projects));
-            
+            localStorage.setItem('tech_projects', JSON.stringify(projects));
             renderData();
             closeEditor();
-            alert("Proyek berhasil di-publish ke Portofolio Utama!");
+            alert(currentEditProjectId ? "Proyek berhasil diperbarui!" : "Proyek Baru berhasil dipublikasikan!");
+        }
+
+        function editProject(id) {
+            const proj = projects.find(p => p.id === id);
+            if(!proj) return;
+            
+            currentEditProjectId = id;
+            document.getElementById('siteEditor').classList.remove('hidden');
+            document.getElementById('siteEditor').classList.add('flex');
+            
+            document.getElementById('draftTitle').value = proj.title;
+            document.getElementById('canvasArea').innerHTML = proj.editorHTML;
         }
 
         function deleteProject(id) {
-            if(confirm("Hapus proyek ini secara permanen?")) {
+            if(confirm("Hapus proyek ini selamanya?")) {
                 projects = projects.filter(p => p.id !== id);
-                localStorage.setItem('tech_portofolio', JSON.stringify(projects));
+                localStorage.setItem('tech_projects', JSON.stringify(projects));
                 renderData();
             }
         }
 
+        // Tampilan Publik Proyek Detail
+        function viewProject(id) {
+            const proj = projects.find(p => p.id === id);
+            if(!proj) return;
+            
+            // Buat window pop-up atau overlay (untuk saat ini buat overlay sederhana)
+            const detailModal = document.createElement('div');
+            detailModal.className = "fixed inset-0 bg-black/95 z-[60] overflow-y-auto p-4 md:p-10 flex flex-col items-center backdrop-blur-md";
+            detailModal.innerHTML = `
+                <div class="w-full max-w-4xl relative">
+                    <button onclick="this.parentElement.parentElement.remove()" class="fixed top-6 right-6 bg-red-600 text-white w-10 h-10 rounded-full font-bold text-xl flex items-center justify-center hover:bg-red-500 z-50 shadow-[0_0_20px_red]">✕</button>
+                    <div class="bg-slate-900 rounded-t-xl h-64 flex flex-col items-center justify-center text-center p-6 border-b border-emerald-500/30 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black/60 z-0"></div>
+                        <img src="${proj.coverImage}" class="absolute inset-0 w-full h-full object-cover z-[-1] blur-sm opacity-50">
+                        <h1 class="text-4xl md:text-6xl font-black text-white uppercase z-10 tracking-widest">${proj.title}</h1>
+                    </div>
+                    <div class="bg-white text-black p-8 md:p-14 rounded-b-xl min-h-[50vh] prose prose-lg max-w-none shadow-2xl">
+                        ${proj.cleanHTML}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(detailModal);
+        }
+
+        // Menu Tambahan Sidebar
         function addMenu() {
             const name = document.getElementById('newMenuName').value;
             const url = document.getElementById('newMenuUrl').value || '#';
             if(!name) return alert("Nama menu wajib diisi!");
-            
             menuItems.push({ id: Date.now(), name, url });
-            localStorage.setItem('tech_menu', JSON.stringify(menuItems));
-            document.getElementById('newMenuName').value = '';
-            document.getElementById('newMenuUrl').value = '';
-            renderData();
-            alert("Menu ditambahkan!");
+            localStorage.setItem('tech_menus', JSON.stringify(menuItems));
+            document.getElementById('newMenuName').value = ''; document.getElementById('newMenuUrl').value = '';
+            renderData(); alert("Menu ditambahkan!");
         }
 
         function deleteMenu(id) {
-            if(confirm("Hapus menu ini?")) {
-                menuItems = menuItems.filter(m => m.id !== id);
-                localStorage.setItem('tech_menu', JSON.stringify(menuItems));
-                renderData();
-            }
+            if(confirm("Hapus menu ini?")) { menuItems = menuItems.filter(m => m.id !== id); localStorage.setItem('tech_menus', JSON.stringify(menuItems)); renderData(); }
         }
 
-        // Inisialisasi Pertama
+        // INIT
+        applyGlobalSettings();
         renderData();
     </script>
 </body>
