@@ -6,7 +6,7 @@
     <title>Portofolio | Nathanael</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Quill.js untuk WYSIWYG Editor (seperti Google Sites) -->
+    <!-- Quill.js untuk WYSIWYG Editor -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     
@@ -24,63 +24,101 @@
         }
     </script>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .ql-toolbar { background-color: #f8fafc; border-radius: 8px 8px 0 0; }
         .ql-container { background-color: #ffffff; color: #000; border-radius: 0 0 8px 8px; min-height: 150px; }
+        /* Sidebar transition */
+        #sidebar { transition: transform 0.3s ease-in-out; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
 
+    <!-- Sidebar Overlay -->
+    <div id="sidebarOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/50 z-40 hidden"></div>
+
+    <!-- Sidebar Menu -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-gray-800 z-50 transform -translate-x-full flex flex-col">
+        <div class="p-6 border-b border-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-blue-400">Menu navigasi</h2>
+            <button onclick="toggleMenu()" class="text-gray-400 hover:text-white">✕</button>
+        </div>
+        <ul id="menuList" class="p-4 flex-grow space-y-2 overflow-y-auto">
+            <!-- Dynamic menu dari Admin akan muncul di sini -->
+        </ul>
+    </aside>
+
     <!-- Navbar -->
-    <nav class="glass fixed w-full z-50 top-0 transition-all">
+    <nav class="glass fixed w-full z-30 top-0 transition-all">
         <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Nathanael.</h1>
+            <div class="flex items-center gap-4">
+                <!-- Hamburger Button -->
+                <button onclick="toggleMenu()" class="p-2 text-gray-300 hover:text-white focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Nathanael.</h1>
+            </div>
             <div>
-                <button id="loginBtn" onclick="showLogin()" class="text-sm bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full transition font-semibold">Admin Login</button>
+                <button id="loginBtn" onclick="showLogin()" class="text-sm bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full transition font-semibold shadow-lg shadow-blue-500/30">Admin Login</button>
                 <button id="logoutBtn" onclick="logout()" class="hidden text-sm bg-red-500 hover:bg-red-600 px-4 py-2 rounded-full transition font-semibold">Logout</button>
             </div>
         </div>
     </nav>
 
-    <!-- Header / Hero Section -->
-    <header class="pt-32 pb-20 px-4 text-center">
-        <h2 class="text-4xl md:text-6xl font-extrabold mb-4">Welcome to My <span class="text-blue-500">Universe</span></h2>
-        <p class="text-gray-400 max-w-xl mx-auto text-lg">Kumpulan karya, proyek, dan pencapaian terbaik saya. Jelajahi portofolio saya di bawah ini.</p>
+    <!-- Profil Diri / Hero Section -->
+    <header class="pt-32 pb-16 px-4 text-center max-w-4xl mx-auto">
+        <div class="relative inline-block mb-6">
+            <img src="https://ui-avatars.com/api/?name=Nathanael&background=3b82f6&color=fff&size=150" alt="Nathanael" class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-blue-500 object-cover shadow-2xl shadow-blue-500/20">
+        </div>
+        <h2 class="text-4xl md:text-5xl font-extrabold mb-4">Hi, I'm <span class="text-blue-500">Nathanael</span></h2>
+        <p class="text-gray-400 max-w-xl mx-auto text-lg mb-8">Web Developer, Designer, & Creator. Selamat datang di portofolio saya, tempat saya membagikan karya dan proyek terbaik yang pernah saya buat.</p>
         
         <!-- Admin Control Panel (Hidden by default) -->
-        <div id="adminPanel" class="hidden mt-8 p-6 glass rounded-xl max-w-4xl mx-auto">
-            <h3 class="text-xl font-bold mb-4 text-left">Admin Panel : Tambah Portofolio</h3>
-            <input type="text" id="projectTitle" placeholder="Judul Proyek..." class="w-full mb-3 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
-            <input type="text" id="projectImage" placeholder="URL Gambar (contoh: https://link-gambar.com/img.jpg)" class="w-full mb-3 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
-            
-            <!-- WYSIWYG Editor -->
-            <div id="editor" class="mb-4"></div>
-            
-            <button onclick="saveProject()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition">Publish Portofolio</button>
+        <div id="adminPanel" class="hidden mt-8 text-left space-y-6">
+            <!-- Tambah Portofolio -->
+            <div class="p-6 glass rounded-xl">
+                <h3 class="text-xl font-bold mb-4 text-blue-400">📝 Tambah Portofolio Baru</h3>
+                <input type="text" id="projectTitle" placeholder="Judul Proyek..." class="w-full mb-3 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
+                <input type="text" id="projectImage" placeholder="URL Gambar (contoh: https://link-gambar.com/img.jpg)" class="w-full mb-3 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
+                <div id="editor" class="mb-4"></div>
+                <button onclick="saveProject()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">Publish Portofolio</button>
+            </div>
+
+            <!-- Tambah Menu Sidebar -->
+            <div class="p-6 glass rounded-xl">
+                <h3 class="text-xl font-bold mb-4 text-purple-400">🔗 Tambah Menu Navigasi (Garis 3)</h3>
+                <div class="flex flex-col md:flex-row gap-3 mb-3">
+                    <input type="text" id="menuName" placeholder="Nama Menu (cth: Instagram Saya)" class="flex-1 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
+                    <input type="text" id="menuUrl" placeholder="URL Tujuan (cth: https://instagram.com/)" class="flex-1 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
+                </div>
+                <button onclick="saveMenu()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition">Tambah Menu</button>
+            </div>
         </div>
     </header>
 
     <!-- Portfolio Grid -->
-    <main class="flex-grow max-w-6xl mx-auto px-4 pb-20 w-full">
+    <main class="flex-grow max-w-6xl mx-auto px-4 pb-20 w-full border-t border-gray-800 pt-16">
+        <h3 class="text-3xl font-bold mb-10 text-center">My <span class="text-blue-500">Projects</span></h3>
         <div id="portfolioContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Portofolio items akan muncul di sini via JavaScript -->
+            <!-- Portofolio items akan muncul di sini -->
         </div>
     </main>
 
     <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center hidden z-50">
-        <div class="glass p-8 rounded-2xl w-96 relative">
-            <button onclick="closeLogin()" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+    <div id="loginModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 backdrop-blur-sm">
+        <div class="glass p-8 rounded-2xl w-96 relative border-gray-700">
+            <button onclick="closeLogin()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
             <h3 class="text-2xl font-bold mb-6 text-center">Admin Access</h3>
-            <input type="text" id="username" placeholder="Username" class="w-full mb-4 p-3 rounded-lg bg-gray-800 text-white border border-gray-700">
-            <input type="password" id="password" placeholder="Password" class="w-full mb-6 p-3 rounded-lg bg-gray-800 text-white border border-gray-700">
+            <input type="text" id="username" placeholder="Username" class="w-full mb-4 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
+            <input type="password" id="password" placeholder="Password" class="w-full mb-6 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
             <button onclick="attemptLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">Login</button>
         </div>
     </div>
 
     <script>
-        // Inisialisasi Quill Editor
+        // Setup Editor
         var quill = new Quill('#editor', {
             theme: 'snow',
             placeholder: 'Tulis deskripsi proyek, tambahkan teks, dll...',
@@ -95,20 +133,53 @@
             }
         });
 
-        // Kredensial Admin sesuai permintaan
         const ADMIN_USER = "nathanael25";
         const ADMIN_PASS = "Nathanael123@";
         let isAdmin = false;
 
-        // Data awal portofolio
+        // Data Storage
         let projects = JSON.parse(localStorage.getItem('portofolio_data')) || [
             {
                 id: 1,
-                title: "Desain UI/UX Modern",
-                image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&q=80",
-                content: "<p>Ini adalah contoh proyek pertama yang menawan.</p>"
+                title: "Website E-Commerce",
+                image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&q=80",
+                content: "<p>Desain antarmuka toko online modern dengan fitur keranjang belanja.</p>"
             }
         ];
+
+        let menuItems = JSON.parse(localStorage.getItem('menu_data')) || [
+            { id: 1, name: "Home", url: "#" },
+            { id: 2, name: "Hubungi Saya", url: "mailto:emailmu@gmail.com" }
+        ];
+
+        // Sidebar Menu Toggle
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Render Menu Sidebar
+        function renderMenu() {
+            const menuList = document.getElementById('menuList');
+            menuList.innerHTML = '';
+            
+            menuItems.forEach(item => {
+                menuList.innerHTML += `
+                    <li class="flex justify-between items-center group">
+                        <a href="${item.url}" class="block w-full p-3 rounded-lg hover:bg-gray-800 transition text-gray-300 hover:text-white" target="_blank">${item.name}</a>
+                        ${isAdmin ? `<button onclick="deleteMenu(${item.id})" class="text-red-500 hover:bg-red-500/20 p-2 rounded-lg ml-2" title="Hapus Menu">✕</button>` : ''}
+                    </li>
+                `;
+            });
+        }
 
         // Render Portofolio
         function renderProjects() {
@@ -117,7 +188,7 @@
             
             projects.forEach(proj => {
                 container.innerHTML += `
-                    <div class="cardBg rounded-xl overflow-hidden hover:transform hover:-translate-y-2 transition duration-300 shadow-lg border border-gray-800 flex flex-col">
+                    <div class="cardBg rounded-xl overflow-hidden hover:-translate-y-2 transition duration-300 shadow-lg border border-gray-800 flex flex-col group">
                         <img src="${proj.image}" alt="${proj.title}" class="w-full h-48 object-cover">
                         <div class="p-6 flex-grow">
                             <h3 class="text-xl font-bold mb-2">${proj.title}</h3>
@@ -129,56 +200,40 @@
             });
         }
 
-        // Login Logic
-        function showLogin() { document.getElementById('loginModal').classList.remove('hidden'); }
-        function closeLogin() { document.getElementById('loginModal').classList.add('hidden'); }
-        
-        function attemptLogin() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+        // Admin Functions
+        function saveMenu() {
+            const name = document.getElementById('menuName').value;
+            const url = document.getElementById('menuUrl').value || '#';
             
-            if (user === ADMIN_USER && pass === ADMIN_PASS) {
-                isAdmin = true;
-                closeLogin();
-                document.getElementById('loginBtn').classList.add('hidden');
-                document.getElementById('logoutBtn').classList.remove('hidden');
-                document.getElementById('adminPanel').classList.remove('hidden');
-                renderProjects();
-                alert('Login Berhasil! Anda sekarang bisa mengedit portofolio.');
-            } else {
-                alert('Username atau Password salah!');
+            if (!name) return alert("Nama menu wajib diisi!");
+
+            menuItems.push({ id: Date.now(), name, url });
+            localStorage.setItem('menu_data', JSON.stringify(menuItems));
+            
+            document.getElementById('menuName').value = '';
+            document.getElementById('menuUrl').value = '';
+            renderMenu();
+            alert("Menu berhasil ditambahkan!");
+        }
+
+        function deleteMenu(id) {
+            if(confirm("Hapus menu ini?")) {
+                menuItems = menuItems.filter(m => m.id !== id);
+                localStorage.setItem('menu_data', JSON.stringify(menuItems));
+                renderMenu();
             }
         }
 
-        function logout() {
-            isAdmin = false;
-            document.getElementById('loginBtn').classList.remove('hidden');
-            document.getElementById('logoutBtn').classList.add('hidden');
-            document.getElementById('adminPanel').classList.add('hidden');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            renderProjects();
-        }
-
-        // CRUD Logic
         function saveProject() {
             const title = document.getElementById('projectTitle').value;
             const image = document.getElementById('projectImage').value || 'https://via.placeholder.com/500x300?text=No+Image';
-            const content = quill.root.innerHTML; // Mengambil konten HTML dari editor
+            const content = quill.root.innerHTML;
 
             if (!title) return alert("Judul proyek wajib diisi!");
 
-            const newProject = {
-                id: Date.now(),
-                title,
-                image,
-                content
-            };
-
-            projects.unshift(newProject);
+            projects.unshift({ id: Date.now(), title, image, content });
             localStorage.setItem('portofolio_data', JSON.stringify(projects));
             
-            // Reset form
             document.getElementById('projectTitle').value = '';
             document.getElementById('projectImage').value = '';
             quill.setContents([]);
@@ -195,8 +250,42 @@
             }
         }
 
-        // Render awal
+        // Auth Functions
+        function showLogin() { document.getElementById('loginModal').classList.remove('hidden'); }
+        function closeLogin() { document.getElementById('loginModal').classList.add('hidden'); }
+        
+        function attemptLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            
+            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+                isAdmin = true;
+                closeLogin();
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                document.getElementById('adminPanel').classList.remove('hidden');
+                renderProjects();
+                renderMenu();
+                alert('Berhasil Login! Panel Admin Terbuka.');
+            } else {
+                alert('Username atau Password salah!');
+            }
+        }
+
+        function logout() {
+            isAdmin = false;
+            document.getElementById('loginBtn').classList.remove('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
+            document.getElementById('adminPanel').classList.add('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            renderProjects();
+            renderMenu();
+        }
+
+        // Initialize App
         renderProjects();
+        renderMenu();
     </script>
 </body>
 </html>
