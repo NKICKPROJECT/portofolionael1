@@ -3,160 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portofolio | Nathanael</title>
+    <title>Nathanael | Tech Portfolio</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Quill.js untuk WYSIWYG Editor -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                    },
                     colors: {
-                        primary: '#3b82f6',
-                        darkBg: '#0f172a',
-                        cardBg: '#1e293b'
+                        emerald: {
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                        },
+                        dark: '#020617', // Very dark slate
+                        darker: '#000000',
                     }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .ql-toolbar { background-color: #f8fafc; border-radius: 8px 8px 0 0; }
-        .ql-container { background-color: #ffffff; color: #000; border-radius: 0 0 8px 8px; min-height: 150px; }
-        /* Sidebar transition */
-        #sidebar { transition: transform 0.3s ease-in-out; }
+        body { background-color: #020617; color: #f8fafc; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(16, 185, 129, 0.2); }
+        .card-glass { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(16, 185, 129, 0.1); }
+        
+        /* Gradient Text */
+        .text-gradient { background: linear-gradient(to right, #34d399, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* Editor Styles (Google Sites lookalike) */
+        .editable-block { border: 2px dashed transparent; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; transition: all 0.2s; position: relative; }
+        .editable-block:hover { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.05); }
+        .editable-block:focus-within { border-color: #10b981; background-color: white; outline: none; }
+        .delete-btn { display: none; position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; width: 24px; height: 24px; text-align: center; cursor: pointer; font-size: 14px; line-height: 24px;}
+        .editable-block:hover .delete-btn { display: block; }
+        
+        [contenteditable]:empty:before { content: attr(placeholder); color: #9ca3af; pointer-events: none; display: block; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
 
-    <!-- Sidebar Overlay -->
-    <div id="sidebarOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/50 z-40 hidden"></div>
-
-    <!-- Sidebar Menu -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-gray-800 z-50 transform -translate-x-full flex flex-col">
-        <div class="p-6 border-b border-gray-800 flex justify-between items-center">
-            <h2 class="text-xl font-bold text-blue-400">Menu navigasi</h2>
-            <button onclick="toggleMenu()" class="text-gray-400 hover:text-white">✕</button>
-        </div>
-        <ul id="menuList" class="p-4 flex-grow space-y-2 overflow-y-auto">
-            <!-- Dynamic menu dari Admin akan muncul di sini -->
-        </ul>
-    </aside>
-
-    <!-- Navbar -->
-    <nav class="glass fixed w-full z-30 top-0 transition-all">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <!-- Hamburger Button -->
-                <button onclick="toggleMenu()" class="p-2 text-gray-300 hover:text-white focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-                <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Nathanael.</h1>
+    <!-- PUBLIC VIEW (Website Utama) -->
+    <div id="publicView">
+        <!-- Sidebar Menu -->
+        <div id="sidebarOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/60 z-40 hidden backdrop-blur-sm"></div>
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-darker border-r border-emerald-900/50 z-50 transform -translate-x-full flex flex-col transition-transform duration-300">
+            <div class="p-6 border-b border-emerald-900/50 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-emerald-400">Navigasi</h2>
+                <button onclick="toggleMenu()" class="text-gray-400 hover:text-white text-2xl">✕</button>
             </div>
-            <div>
-                <button id="loginBtn" onclick="showLogin()" class="text-sm bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full transition font-semibold shadow-lg shadow-blue-500/30">Admin Login</button>
-                <button id="logoutBtn" onclick="logout()" class="hidden text-sm bg-red-500 hover:bg-red-600 px-4 py-2 rounded-full transition font-semibold">Logout</button>
-            </div>
-        </div>
-    </nav>
+            <ul id="menuList" class="p-4 flex-grow space-y-2 overflow-y-auto text-gray-300">
+                <!-- Menu Dinamis -->
+            </ul>
+        </aside>
 
-    <!-- Profil Diri / Hero Section -->
-    <header class="pt-32 pb-16 px-4 text-center max-w-4xl mx-auto">
-        <div class="relative inline-block mb-6">
-            <img src="https://ui-avatars.com/api/?name=Nathanael&background=3b82f6&color=fff&size=150" alt="Nathanael" class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-blue-500 object-cover shadow-2xl shadow-blue-500/20">
-        </div>
-        <h2 class="text-4xl md:text-5xl font-extrabold mb-4">Hi, I'm <span class="text-blue-500">Nathanael</span></h2>
-        <p class="text-gray-400 max-w-xl mx-auto text-lg mb-8">Web Developer, Designer, & Creator. Selamat datang di portofolio saya, tempat saya membagikan karya dan proyek terbaik yang pernah saya buat.</p>
-        
-        <!-- Admin Control Panel (Hidden by default) -->
-        <div id="adminPanel" class="hidden mt-8 text-left space-y-6">
-            <!-- Tambah Portofolio -->
-            <div class="p-6 glass rounded-xl">
-                <h3 class="text-xl font-bold mb-4 text-blue-400">📝 Tambah Portofolio Baru</h3>
-                <input type="text" id="projectTitle" placeholder="Judul Proyek..." class="w-full mb-3 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
-                <input type="text" id="projectImage" placeholder="URL Gambar (contoh: https://link-gambar.com/img.jpg)" class="w-full mb-3 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
-                <div id="editor" class="mb-4"></div>
-                <button onclick="saveProject()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">Publish Portofolio</button>
-            </div>
-
-            <!-- Tambah Menu Sidebar -->
-            <div class="p-6 glass rounded-xl">
-                <h3 class="text-xl font-bold mb-4 text-purple-400">🔗 Tambah Menu Navigasi (Garis 3)</h3>
-                <div class="flex flex-col md:flex-row gap-3 mb-3">
-                    <input type="text" id="menuName" placeholder="Nama Menu (cth: Instagram Saya)" class="flex-1 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
-                    <input type="text" id="menuUrl" placeholder="URL Tujuan (cth: https://instagram.com/)" class="flex-1 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
+        <!-- Navbar -->
+        <nav class="glass fixed w-full z-30 top-0">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleMenu()" class="p-2 text-emerald-400 hover:text-emerald-300">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <h1 class="text-2xl font-bold text-white tracking-wider">&lt;Nathanael /&gt;</h1>
                 </div>
-                <button onclick="saveMenu()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition">Tambah Menu</button>
+                <div>
+                    <button id="loginBtn" onclick="showLogin()" class="text-sm bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg transition font-semibold shadow-[0_0_15px_rgba(16,185,129,0.4)]">Admin Login</button>
+                    <div id="adminControls" class="hidden flex gap-3">
+                        <button onclick="openEditor()" class="text-sm bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg transition font-semibold shadow-lg">🛠 Buka Editor Web</button>
+                        <button onclick="logout()" class="text-sm bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-lg transition font-semibold">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section (Tech Background) -->
+        <header class="relative pt-32 pb-20 px-4 text-center min-h-[80vh] flex flex-col justify-center items-center">
+            <!-- Background Image with Overlay -->
+            <div class="absolute inset-0 z-[-1]">
+                <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1920&q=80" alt="Coding Background" class="w-full h-full object-cover opacity-20">
+                <div class="absolute inset-0 bg-gradient-to-b from-transparent to-dark"></div>
+            </div>
+
+            <div class="relative inline-block mb-8">
+                <img src="https://ui-avatars.com/api/?name=Nathanael&background=10b981&color=fff&size=150" alt="Profile" class="w-40 h-40 rounded-full border-4 border-emerald-500 object-cover shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+            </div>
+            <h2 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">System.<span class="text-gradient">Architect</span></h2>
+            <p class="text-gray-300 max-w-2xl mx-auto text-lg md:text-xl leading-relaxed">
+                Mengubah baris kode menjadi solusi digital yang elegan. Selamat datang di ruang karya saya, tempat teknologi dan desain menyatu.
+            </p>
+        </header>
+
+        <!-- Portofolio Grid -->
+        <main class="flex-grow max-w-7xl mx-auto px-4 pb-24 w-full">
+            <div class="flex items-center gap-4 mb-12">
+                <div class="h-px bg-emerald-600 flex-grow opacity-30"></div>
+                <h3 class="text-3xl font-bold text-white uppercase tracking-widest">Inisialisasi <span class="text-emerald-500">Proyek</span></h3>
+                <div class="h-px bg-emerald-600 flex-grow opacity-30"></div>
+            </div>
+            
+            <div id="portfolioGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Data portofolio akan di-render di sini -->
+            </div>
+        </main>
+    </div>
+
+    <!-- GOOGLE SITES-LIKE EDITOR (Admin View) -->
+    <!-- Tampilan ini dirancang semirip mungkin dengan Google Sites sesuai gambar referensi -->
+    <div id="siteEditor" class="fixed inset-0 bg-white z-50 hidden flex-col">
+        <!-- Editor Navbar -->
+        <div class="h-14 border-b flex justify-between items-center px-4 bg-white text-black">
+            <div class="flex items-center gap-4">
+                <button onclick="closeEditor()" class="text-gray-500 hover:text-black">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </button>
+                <span class="font-semibold text-lg text-gray-700">Editor Proyek Portofolio</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-400">All changes saved locally</span>
+                <!-- Tombol Publish Biru khas Google Sites -->
+                <button onclick="publishProject()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium text-sm transition">Publish</button>
             </div>
         </div>
-    </header>
 
-    <!-- Portfolio Grid -->
-    <main class="flex-grow max-w-6xl mx-auto px-4 pb-20 w-full border-t border-gray-800 pt-16">
-        <h3 class="text-3xl font-bold mb-10 text-center">My <span class="text-blue-500">Projects</span></h3>
-        <div id="portfolioContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Portofolio items akan muncul di sini -->
+        <!-- Editor Body -->
+        <div class="flex flex-1 overflow-hidden bg-gray-50 text-black">
+            
+            <!-- Left Canvas (Workspace) -->
+            <div class="flex-1 overflow-y-auto p-10 flex flex-col items-center">
+                <div class="w-full max-w-4xl bg-white shadow-sm min-h-screen border rounded">
+                    
+                    <!-- Title Header Proyek -->
+                    <div class="w-full bg-slate-800 h-48 relative flex items-center justify-center text-white text-center rounded-t">
+                        <input type="text" id="draftTitle" placeholder="MASUKKAN JUDUL PROYEK" class="bg-transparent text-4xl font-bold text-center border-none focus:outline-none w-full placeholder-gray-400 uppercase">
+                    </div>
+
+                    <!-- Area Blok Konten -->
+                    <div id="canvasArea" class="p-8 min-h-[400px]">
+                        <!-- Elemen yang di-insert admin akan muncul di sini -->
+                        <div class="text-center text-gray-400 mt-10 italic pointer-events-none" id="emptyState">
+                            Gunakan menu di kanan untuk menambahkan gambar, teks, atau layout blok.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Sidebar (Insert Menu Google Sites Style) -->
+            <div class="w-80 bg-white border-l border-gray-200 overflow-y-auto shadow-xl z-10 flex flex-col">
+                <!-- Tabs: Insert, Pages, Themes -->
+                <div class="flex border-b text-sm font-medium text-gray-600">
+                    <div class="flex-1 text-center py-3 border-b-2 border-blue-600 text-blue-600 cursor-pointer">Insert</div>
+                    <div class="flex-1 text-center py-3 hover:bg-gray-50 cursor-pointer">Pages</div>
+                    <div class="flex-1 text-center py-3 hover:bg-gray-50 cursor-pointer">Themes</div>
+                </div>
+
+                <div class="p-4">
+                    <!-- Insert Buttons (Text & Image) -->
+                    <div class="grid grid-cols-2 gap-3 mb-8">
+                        <button onclick="addTextBlock()" class="flex flex-col items-center justify-center p-4 border rounded hover:bg-gray-50 hover:shadow-sm transition">
+                            <span class="text-blue-600 font-serif text-2xl font-bold mb-1">Tt</span>
+                            <span class="text-xs text-gray-700">Text box</span>
+                        </button>
+                        <button onclick="addImageBlock()" class="flex flex-col items-center justify-center p-4 border rounded hover:bg-gray-50 hover:shadow-sm transition">
+                            <svg class="w-7 h-7 text-red-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span class="text-xs text-gray-700">Images</span>
+                        </button>
+                    </div>
+
+                    <!-- Content Blocks Section -->
+                    <div class="flex justify-between items-center mb-4 text-xs font-bold text-gray-500">
+                        <span>CONTENT BLOCKS</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <!-- Layout 1: Image Left, Text Right -->
+                        <button onclick="addLayoutBlock()" class="p-2 border rounded hover:bg-gray-100 flex items-center justify-center h-16">
+                            <div class="flex w-full gap-2 opacity-60">
+                                <div class="w-1/2 h-10 bg-gray-400 rounded-sm"></div>
+                                <div class="w-1/2 flex flex-col gap-1">
+                                    <div class="w-full h-2 bg-gray-400"></div>
+                                    <div class="w-3/4 h-2 bg-gray-400"></div>
+                                </div>
+                            </div>
+                        </button>
+                        
+                        <!-- Extra Setting Menu -->
+                        <div class="p-3 bg-gray-50 border rounded text-xs text-gray-600 mt-4 col-span-2">
+                            <b>Setting Navigasi (Garis 3):</b><br>
+                            <input type="text" id="newMenuName" placeholder="Nama Menu (cth: GitHub)" class="w-full mt-2 p-1 border rounded"><br>
+                            <input type="text" id="newMenuUrl" placeholder="URL (cth: https://github.com/)" class="w-full mt-2 p-1 border rounded"><br>
+                            <button onclick="addMenu()" class="mt-2 bg-slate-800 text-white px-3 py-1 rounded w-full">Tambah Menu</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </main>
+    </div>
 
     <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 backdrop-blur-sm">
-        <div class="glass p-8 rounded-2xl w-96 relative border-gray-700">
+    <div id="loginModal" class="fixed inset-0 bg-black/90 flex items-center justify-center hidden z-50 backdrop-blur-md">
+        <div class="card-glass p-8 rounded-2xl w-96 relative border-emerald-900 shadow-2xl">
             <button onclick="closeLogin()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
-            <h3 class="text-2xl font-bold mb-6 text-center">Admin Access</h3>
-            <input type="text" id="username" placeholder="Username" class="w-full mb-4 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
-            <input type="password" id="password" placeholder="Password" class="w-full mb-6 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
-            <button onclick="attemptLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">Login</button>
+            <h3 class="text-2xl font-bold mb-6 text-center text-white">System <span class="text-emerald-500">Access</span></h3>
+            <input type="text" id="username" placeholder="Username" class="w-full mb-4 p-3 rounded-lg bg-dark text-white border border-gray-700 focus:outline-none focus:border-emerald-500">
+            <input type="password" id="password" placeholder="Password" class="w-full mb-6 p-3 rounded-lg bg-dark text-white border border-gray-700 focus:outline-none focus:border-emerald-500">
+            <button onclick="attemptLogin()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition">AUTHENTICATE</button>
         </div>
     </div>
 
     <script>
-        // Setup Editor
-        var quill = new Quill('#editor', {
-            theme: 'snow',
-            placeholder: 'Tulis deskripsi proyek, tambahkan teks, dll...',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link', 'image'],
-                    ['clean']
-                ]
-            }
-        });
-
+        // Kredensial Admin
         const ADMIN_USER = "nathanael25";
         const ADMIN_PASS = "Nathanael123@";
         let isAdmin = false;
 
-        // Data Storage
-        let projects = JSON.parse(localStorage.getItem('portofolio_data')) || [
+        // Inisialisasi Data Storage (Menggunakan gambar komputer/web dev default)
+        let projects = JSON.parse(localStorage.getItem('tech_portofolio')) || [
             {
                 id: 1,
-                title: "Website E-Commerce",
-                image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&q=80",
-                content: "<p>Desain antarmuka toko online modern dengan fitur keranjang belanja.</p>"
+                title: "WEB APP DEVELOPMENT",
+                coverImage: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=600&q=80",
+                contentHTML: "<p class='text-gray-300'>Sistem manajemen database berbasis cloud dengan UI modern.</p>"
             }
         ];
 
-        let menuItems = JSON.parse(localStorage.getItem('menu_data')) || [
+        let menuItems = JSON.parse(localStorage.getItem('tech_menu')) || [
             { id: 1, name: "Home", url: "#" },
-            { id: 2, name: "Hubungi Saya", url: "mailto:emailmu@gmail.com" }
+            { id: 2, name: "GitHub Repository", url: "https://github.com/" }
         ];
 
-        // Sidebar Menu Toggle
+        // FUNGSI UTAMA HALAMAN PUBLIK
         function toggleMenu() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            
             if (sidebar.classList.contains('-translate-x-full')) {
                 sidebar.classList.remove('-translate-x-full');
                 overlay.classList.remove('hidden');
@@ -166,126 +252,205 @@
             }
         }
 
-        // Render Menu Sidebar
-        function renderMenu() {
+        function renderData() {
+            // Render Menu
             const menuList = document.getElementById('menuList');
             menuList.innerHTML = '';
-            
             menuItems.forEach(item => {
                 menuList.innerHTML += `
                     <li class="flex justify-between items-center group">
-                        <a href="${item.url}" class="block w-full p-3 rounded-lg hover:bg-gray-800 transition text-gray-300 hover:text-white" target="_blank">${item.name}</a>
-                        ${isAdmin ? `<button onclick="deleteMenu(${item.id})" class="text-red-500 hover:bg-red-500/20 p-2 rounded-lg ml-2" title="Hapus Menu">✕</button>` : ''}
+                        <a href="${item.url}" class="block w-full p-3 rounded-lg hover:bg-emerald-900/40 transition hover:text-emerald-400" target="_blank">${item.name}</a>
+                        ${isAdmin ? `<button onclick="deleteMenu(${item.id})" class="text-red-500 bg-red-900/20 px-2 py-1 rounded hidden group-hover:block">Del</button>` : ''}
                     </li>
                 `;
             });
-        }
 
-        // Render Portofolio
-        function renderProjects() {
-            const container = document.getElementById('portfolioContainer');
-            container.innerHTML = '';
-            
+            // Render Portofolio
+            const grid = document.getElementById('portfolioGrid');
+            grid.innerHTML = '';
             projects.forEach(proj => {
-                container.innerHTML += `
-                    <div class="cardBg rounded-xl overflow-hidden hover:-translate-y-2 transition duration-300 shadow-lg border border-gray-800 flex flex-col group">
-                        <img src="${proj.image}" alt="${proj.title}" class="w-full h-48 object-cover">
-                        <div class="p-6 flex-grow">
-                            <h3 class="text-xl font-bold mb-2">${proj.title}</h3>
-                            <div class="text-gray-400 text-sm mb-4 line-clamp-3">${proj.content}</div>
+                grid.innerHTML += `
+                    <div class="card-glass rounded-xl overflow-hidden hover:-translate-y-2 transition duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)] group relative flex flex-col">
+                        <div class="h-48 overflow-hidden relative">
+                            <div class="absolute inset-0 bg-emerald-500/20 mix-blend-overlay group-hover:opacity-0 transition z-10"></div>
+                            <img src="${proj.coverImage}" alt="Cover" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-500">
                         </div>
-                        ${isAdmin ? `<button onclick="deleteProject(${proj.id})" class="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white py-3 transition w-full font-semibold">Hapus Proyek</button>` : ''}
+                        <div class="p-6 flex-grow">
+                            <h3 class="text-xl font-bold mb-3 text-emerald-400 uppercase tracking-wide">${proj.title}</h3>
+                            <div class="text-gray-400 text-sm mb-4 prose prose-invert">${proj.contentHTML}</div>
+                        </div>
+                        ${isAdmin ? `<button onclick="deleteProject(${proj.id})" class="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded text-xs z-20 shadow-lg">Hapus Proyek</button>` : ''}
                     </div>
                 `;
             });
         }
 
-        // Admin Functions
-        function saveMenu() {
-            const name = document.getElementById('menuName').value;
-            const url = document.getElementById('menuUrl').value || '#';
-            
-            if (!name) return alert("Nama menu wajib diisi!");
-
-            menuItems.push({ id: Date.now(), name, url });
-            localStorage.setItem('menu_data', JSON.stringify(menuItems));
-            
-            document.getElementById('menuName').value = '';
-            document.getElementById('menuUrl').value = '';
-            renderMenu();
-            alert("Menu berhasil ditambahkan!");
-        }
-
-        function deleteMenu(id) {
-            if(confirm("Hapus menu ini?")) {
-                menuItems = menuItems.filter(m => m.id !== id);
-                localStorage.setItem('menu_data', JSON.stringify(menuItems));
-                renderMenu();
-            }
-        }
-
-        function saveProject() {
-            const title = document.getElementById('projectTitle').value;
-            const image = document.getElementById('projectImage').value || 'https://via.placeholder.com/500x300?text=No+Image';
-            const content = quill.root.innerHTML;
-
-            if (!title) return alert("Judul proyek wajib diisi!");
-
-            projects.unshift({ id: Date.now(), title, image, content });
-            localStorage.setItem('portofolio_data', JSON.stringify(projects));
-            
-            document.getElementById('projectTitle').value = '';
-            document.getElementById('projectImage').value = '';
-            quill.setContents([]);
-            
-            renderProjects();
-            alert("Portofolio berhasil ditambahkan!");
-        }
-
-        function deleteProject(id) {
-            if(confirm("Yakin ingin menghapus portofolio ini?")) {
-                projects = projects.filter(p => p.id !== id);
-                localStorage.setItem('portofolio_data', JSON.stringify(projects));
-                renderProjects();
-            }
-        }
-
-        // Auth Functions
+        // FUNGSI AUTHENTIKASI
         function showLogin() { document.getElementById('loginModal').classList.remove('hidden'); }
         function closeLogin() { document.getElementById('loginModal').classList.add('hidden'); }
         
         function attemptLogin() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            
-            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            if (u === ADMIN_USER && p === ADMIN_PASS) {
                 isAdmin = true;
                 closeLogin();
                 document.getElementById('loginBtn').classList.add('hidden');
-                document.getElementById('logoutBtn').classList.remove('hidden');
-                document.getElementById('adminPanel').classList.remove('hidden');
-                renderProjects();
-                renderMenu();
-                alert('Berhasil Login! Panel Admin Terbuka.');
+                document.getElementById('adminControls').classList.remove('hidden');
+                renderData();
             } else {
-                alert('Username atau Password salah!');
+                alert('Akses Ditolak!');
             }
         }
 
         function logout() {
             isAdmin = false;
             document.getElementById('loginBtn').classList.remove('hidden');
-            document.getElementById('logoutBtn').classList.add('hidden');
-            document.getElementById('adminPanel').classList.add('hidden');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            renderProjects();
-            renderMenu();
+            document.getElementById('adminControls').classList.add('hidden');
+            renderData();
         }
 
-        // Initialize App
-        renderProjects();
-        renderMenu();
+        // FUNGSI EDITOR GOOGLE SITES-STYLE
+        function openEditor() {
+            document.getElementById('siteEditor').classList.remove('hidden');
+            document.getElementById('siteEditor').classList.add('flex');
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('canvasArea').innerHTML = '<div class="text-center text-gray-400 mt-10 italic pointer-events-none" id="emptyState">Gunakan menu di kanan untuk menambahkan gambar, teks, atau layout blok.</div>';
+            document.getElementById('draftTitle').value = '';
+        }
+        
+        function closeEditor() {
+            document.getElementById('siteEditor').classList.add('hidden');
+            document.getElementById('siteEditor').classList.remove('flex');
+        }
+
+        function hideEmptyState() {
+            const es = document.getElementById('emptyState');
+            if(es) es.remove();
+        }
+
+        function addTextBlock() {
+            hideEmptyState();
+            const id = Date.now();
+            const html = `
+                <div id="block-${id}" class="editable-block group">
+                    <div onclick="this.parentElement.remove()" class="delete-btn" title="Hapus Blok">✕</div>
+                    <div contenteditable="true" placeholder="Ketik teks deskripsi di sini..." class="w-full text-lg outline-none min-h-[50px] p-2"></div>
+                </div>
+            `;
+            document.getElementById('canvasArea').insertAdjacentHTML('beforeend', html);
+        }
+
+        function addImageBlock() {
+            const url = prompt("Masukkan URL Gambar (Kosongkan untuk gambar default tech):") || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80";
+            hideEmptyState();
+            const id = Date.now();
+            const html = `
+                <div id="block-${id}" class="editable-block group">
+                    <div onclick="this.parentElement.remove()" class="delete-btn">✕</div>
+                    <img src="${url}" class="w-full h-auto rounded shadow-sm" alt="Inserted Image">
+                </div>
+            `;
+            document.getElementById('canvasArea').insertAdjacentHTML('beforeend', html);
+        }
+
+        function addLayoutBlock() {
+            const url = prompt("Masukkan URL Gambar untuk layout:") || "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=500&q=80";
+            hideEmptyState();
+            const id = Date.now();
+            const html = `
+                <div id="block-${id}" class="editable-block group flex flex-col md:flex-row gap-6 items-start">
+                    <div onclick="this.parentElement.remove()" class="delete-btn">✕</div>
+                    <img src="${url}" class="w-full md:w-1/2 rounded shadow-sm" alt="Layout Image">
+                    <div contenteditable="true" placeholder="Ketik penjelasan untuk gambar di samping..." class="w-full md:w-1/2 outline-none text-gray-700 min-h-[100px] p-2"></div>
+                </div>
+            `;
+            document.getElementById('canvasArea').insertAdjacentHTML('beforeend', html);
+        }
+
+        function publishProject() {
+            const title = document.getElementById('draftTitle').value;
+            if(!title) return alert("Judul Proyek wajib diisi di bagian atas kanvas!");
+
+            // Ambil semua isi canvas
+            const canvasArea = document.getElementById('canvasArea');
+            
+            // Bersihkan elemen UI editor (tombol delete & border dashed) sebelum disimpan ke public
+            let cleanHTML = "";
+            const blocks = canvasArea.querySelectorAll('.editable-block');
+            
+            if(blocks.length === 0) return alert("Tambahkan minimal 1 konten blok terlebih dahulu!");
+
+            // Ekstrak gambar pertama untuk dijadikan cover
+            let firstImage = "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=600&q=80";
+            const imgTag = canvasArea.querySelector('img');
+            if(imgTag) firstImage = imgTag.src;
+
+            blocks.forEach(block => {
+                // Clone block untuk dimanipulasi tanpa merusak tampilan editor
+                let clone = block.cloneNode(true);
+                // Hapus class editor
+                clone.className = "mb-4"; 
+                // Hapus tombol delete
+                const delBtn = clone.querySelector('.delete-btn');
+                if(delBtn) delBtn.remove();
+                
+                // Ambil div yang contenteditable dan hapus attributenya
+                const editables = clone.querySelectorAll('[contenteditable]');
+                editables.forEach(e => {
+                    e.removeAttribute('contenteditable');
+                    e.removeAttribute('placeholder');
+                });
+
+                cleanHTML += clone.outerHTML;
+            });
+
+            // Simpan Data
+            projects.unshift({
+                id: Date.now(),
+                title: title,
+                coverImage: firstImage,
+                contentHTML: cleanHTML
+            });
+            
+            localStorage.setItem('tech_portofolio', JSON.stringify(projects));
+            
+            renderData();
+            closeEditor();
+            alert("Proyek berhasil di-publish ke Portofolio Utama!");
+        }
+
+        function deleteProject(id) {
+            if(confirm("Hapus proyek ini secara permanen?")) {
+                projects = projects.filter(p => p.id !== id);
+                localStorage.setItem('tech_portofolio', JSON.stringify(projects));
+                renderData();
+            }
+        }
+
+        function addMenu() {
+            const name = document.getElementById('newMenuName').value;
+            const url = document.getElementById('newMenuUrl').value || '#';
+            if(!name) return alert("Nama menu wajib diisi!");
+            
+            menuItems.push({ id: Date.now(), name, url });
+            localStorage.setItem('tech_menu', JSON.stringify(menuItems));
+            document.getElementById('newMenuName').value = '';
+            document.getElementById('newMenuUrl').value = '';
+            renderData();
+            alert("Menu ditambahkan!");
+        }
+
+        function deleteMenu(id) {
+            if(confirm("Hapus menu ini?")) {
+                menuItems = menuItems.filter(m => m.id !== id);
+                localStorage.setItem('tech_menu', JSON.stringify(menuItems));
+                renderData();
+            }
+        }
+
+        // Inisialisasi Pertama
+        renderData();
     </script>
 </body>
 </html>
